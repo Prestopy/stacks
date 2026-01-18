@@ -1,14 +1,12 @@
 import { IconFolderPlus, IconFolderSymlink, IconPlus, IconTrash } from "@tabler/icons-react";
-import { TaskItemModifications, TaskLocation, TaskView } from "@/app/util/types";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { TaskItemModifications, TaskLocation } from "@/app/util/types";
 import MoveInputDialog from "@/app/Components/MoveInputDialog";
 import { Doc } from "@/convex/_generated/dataModel";
 
 interface ActionbarProps {
 	taskFolders: Doc<"taskFolders">[];
-	projects: Doc<"projects">[];
-	universes: Doc<"universes">[];
 
+	isFilterView?: boolean;
 	isTaskItemSelected?: boolean;
 
 	createTaskItem: () => Promise<void>;
@@ -20,9 +18,8 @@ interface ActionbarProps {
 
 export default function Actionbar({
 	taskFolders,
-	projects,
-	universes,
 
+	isFilterView,
 	isTaskItemSelected,
 	createTaskItem,
 	createTaskFolder,
@@ -36,7 +33,10 @@ export default function Actionbar({
 				<IconPlus size={20} />
 			</button>
 
-			<button onClick={createTaskFolder}>
+			<button
+				onClick={createTaskFolder}
+				disabled={isFilterView}
+			>
 				<IconFolderPlus size={20} />
 			</button>
 

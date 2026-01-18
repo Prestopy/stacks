@@ -348,6 +348,8 @@ export default function Home() {
 
 	const createTaskFolder = async (view: TaskView) => {
 		try {
+			if (view.kind === "system_filter") throw new Error("Cannot create folders in filter views");
+
 			const taskFolderId = await addTaskFolder({
 				data: {
 					title: "New Folder",
@@ -600,9 +602,10 @@ export default function Home() {
 							<div className="shrink-0">
 								<Actionbar
 									taskFolders={taskFoldersForView}
-									projects={allProjects}
-									universes={allUniverses}
+
+									isFilterView={selectedView.kind === "system_filter"}
 									isTaskItemSelected={selectedTaskItem !== null}
+
 									createTaskItem={() => createTaskItem(selectedView)}
 									createTaskFolder={() => createTaskFolder(selectedView)}
 									modifySelectedTaskItem={(mods: TaskItemModifications) => {
