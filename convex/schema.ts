@@ -6,42 +6,65 @@ export default defineSchema({
 		title: v.string(),
 		note: v.optional(v.string()),
 		isCompleted: v.boolean(),
+		isFlagged: v.boolean(),
+		isSomeday: v.boolean(),
 		startDate: v.optional(v.int64()),
 		deadline: v.optional(v.int64()),
 
 		// Relations
-		parentStack: v.id("stacks"),
-
+		parentUniverse: v.optional(v.id("universes")),
+		parentProject: v.optional(v.id("projects")),
+		parentTaskFolder: v.optional(v.id("taskFolders")),
 		parentTaskItem: v.optional(v.id("taskItems")),
-		childTaskItems: v.optional(v.array(v.id("taskItems"))),
 
 		user: v.id("users"),
-	}),
+	})
+		.index("by_completion", ["isCompleted"])
+		.index("by_parentUniverse", ["parentUniverse"])
+		.index("by_parentProject", ["parentProject"])
+		.index("by_parentTaskFolder", ["parentTaskFolder"]),
+
 	taskFolders: defineTable({
 		title: v.string(),
 		description: v.optional(v.string()),
+		iconName: v.optional(v.string()),
+		color: v.optional(v.string()),
 
 		// Relations
-		childTaskItems: v.array(v.id("taskItems")),
-
-		parentStack: v.id("stacks"),
+		parentUniverse: v.id("universes"),
+		parentProject: v.optional(v.id("projects")),
 
 		user: v.id("users"),
-	}),
-	stacks: defineTable({
+	})
+		.index("by_parentUniverse", ["parentUniverse"])
+		.index("by_parentProject", ["parentProject"]),
+
+	projects: defineTable({
 		title: v.string(),
 		description: v.optional(v.string()),
+
+		iconName: v.optional(v.string()),
+		color: v.optional(v.string()),
 		deadline: v.optional(v.int64()),
 
 		// Relations
-		childTaskItems: v.array(v.id("taskItems")),
+		parentUniverse: v.id("universes"),
 
-		childTaskFolders: v.array(v.id("taskFolders")),
+		user: v.id("users"),
+	})
+		.index("by_parentUniverse", ["parentUniverse"]),
+
+	universes: defineTable({
+		title: v.string(),
+		description: v.optional(v.string()),
+
+		iconName: v.optional(v.string()),
+		color: v.optional(v.string()),
 
 		user: v.id("users"),
 	}),
 	users: defineTable({
 		firstName: v.string(),
 		lastName: v.string(),
-	})
+	}),
 });

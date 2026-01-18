@@ -20,18 +20,16 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({
-	                                   children,
-                                   }: Readonly<{
+	children,
+}: Readonly<{
 	children: React.ReactNode;
 }>) {
 	return (
 		<html lang="en">
 			<body
-				className={`${geistSans.className} ${geistMono.variable} antialiased`}
+				className={`${geistSans.className} ${geistMono.variable} antialiased dark`}
 			>
-				<ConvexClientProvider>
-					{children}
-				</ConvexClientProvider>
+				<ConvexClientProvider>{children}</ConvexClientProvider>
 			</body>
 		</html>
 	);
