@@ -44,6 +44,23 @@ export interface ProjectView extends BaseView {
 	id: Id<"projects">;
 }
 
+export type Block = TaskItemBlock | TaskFolderBlock | ProjectBlock;
+export interface TaskItemBlock {
+	kind: "taskItem";
+	value: Doc<"taskItems">;
+	children?: [];
+}
+export interface TaskFolderBlock {
+	kind: "taskFolder";
+	value: Doc<"taskFolders">;
+	children: TaskItemBlock[];
+}
+export interface ProjectBlock {
+	kind: "project";
+	value: Doc<"projects">;
+	children: TaskItemBlock[];
+}
+
 interface BaseLocation {
 	_id: string;
 	title: string;

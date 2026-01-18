@@ -1,5 +1,6 @@
 import ListLayout from "@/app/Components/ListLayout";
 import {
+	Block,
 	FilterView,
 	ProjectModifications,
 	ProjectView,
@@ -27,9 +28,11 @@ import { useEffect, useRef, useState } from "react";
 import CalendarInputTag from "@/app/Components/CalendarInputTag";
 import { dateToPatch } from "@/app/util/utilities";
 
+
 interface BaseProps {
-	taskFolders: Doc<"taskFolders">[];
-	taskItems: Doc<"taskItems">[];
+	// taskFolders: Doc<"taskFolders">[];
+	// taskItems: Doc<"taskItems">[];
+	blocks: Block[];
 	selectedTaskItem: Id<"taskItems"> | null;
 
 	setSelectedTaskItem: (itemId: Id<"taskItems"> | null) => void;
@@ -51,14 +54,12 @@ interface SystemFilterProps {
 	modifyThis?: undefined;
 	deleteThis?: undefined;
 }
-
 interface UniverseProps {
 	view: UniverseView;
 	kind: UniverseView["kind"];
 	modifyThis: (mods: UniverseModifications) => void;
 	deleteThis: () => void;
 }
-
 interface ProjectProps {
 	view: ProjectView;
 	kind: ProjectView["kind"];
@@ -75,8 +76,8 @@ interface MainViewProps extends BaseProps {
 export default function MainView({
 	options,
 
-	taskFolders,
-	taskItems,
+	blocks,
+
 	selectedTaskItem,
 	setSelectedTaskItem,
 	modifyTaskItem,
@@ -86,10 +87,13 @@ export default function MainView({
 }: MainViewProps) {
 	return (
 		<div
-			className="h-full flex flex-col items-center p-4 pt-20 bg-slate-900"
+			className="flex-1 flex flex-col items-center px-4 pt-20 overflow-auto bg-slate-900"
+			style={{
+				scrollbarGutter: "stable"
+			}}
 			onClick={() => setSelectedTaskItem(null)}
 		>
-			<div className="w-[720] h-full">
+			<div className="w-[720] h-full pb-20">
 				<TitleBar options={options} />
 
 				{
@@ -117,12 +121,13 @@ export default function MainView({
 					)
 				}
 
-				<hr className="my-5 px-5 border-none {/*border-2 border-slate-700*/}" />
+				<hr className="my-5 px-5 border-none" />
 				{options.view.layout === "list" ?
 					<ListLayout
 						isFilterLayout={options.view.kind === "system_filter"}
-						taskFolders={taskFolders}
-						taskItems={taskItems}
+
+						blocks={blocks}
+
 						selectedTaskItem={selectedTaskItem}
 						setSelectedTaskItem={setSelectedTaskItem}
 						modifyTaskItem={modifyTaskItem}
