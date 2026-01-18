@@ -8,6 +8,11 @@ export function toDate(value: DateParam): Date {
 	return value;
 }
 
+export function toDateOrUndefined(value: DateParam | undefined): Date | undefined {
+	if (value === undefined) return undefined;
+	return toDate(value);
+}
+
 export function today() {
 	return new Date(new Date().setHours(0, 0, 0, 0));
 }

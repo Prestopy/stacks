@@ -77,7 +77,7 @@ export default class Constants {
 
 	static DynamicIcons: {
 		[key in string]: (
-			c: (typeof Constants.Colors)[keyof typeof Constants.Colors],
+			c: string | undefined, //(typeof Constants.Colors)[keyof typeof Constants.Colors],
 		) => IconData;
 	} = {
 		PROJECT: (c) => ({

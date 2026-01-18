@@ -5,7 +5,6 @@ import {
 	UniverseView,
 	ViewId,
 } from "@/app/util/types";
-import { Icon } from "tabler-dynamic-icon";
 import RichIcon from "@/app/Components/RichIcon";
 import { Id } from "@/convex/_generated/dataModel";
 import {
@@ -104,7 +103,7 @@ function SidebarButton({
 }
 
 interface BlockListProps {
-	blocks: Block[];
+	blocks: Section[];
 	selectedView: TaskView | null;
 	setSelectedViewId: (view: ViewId) => void;
 
@@ -203,7 +202,7 @@ function BlockList({
 	});
 }
 
-type Block = Divider | Spacer | Data;
+type Section = Divider | Spacer | Data;
 interface Divider {
 	kind: "divider";
 }
@@ -229,8 +228,8 @@ interface ChildData extends BaseData {
 }
 
 interface SidebarProps {
-	systemBlocks: Block[];
-	userBlocks: Block[];
+	systemBlocks: Section[];
+	userBlocks: Section[];
 
 	selectedView: TaskView | null;
 	setSelectedViewId: (view: ViewId) => void;

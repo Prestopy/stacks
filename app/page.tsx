@@ -4,7 +4,6 @@ import Sidebar from "@/app/Components/Sidebar";
 import MainView from "@/app/MainView";
 import { useMemo, useState } from "react";
 import {
-	Block,
 	getViewFromId, ProjectBlock,
 	ProjectModifications, TaskFolderBlock,
 	TaskFolderModifications, TaskItemBlock,
@@ -17,7 +16,7 @@ import {
 } from "@/app/util/types";
 
 import { useMutation, useQuery } from "convex/react";
-import { api } from "../convex/_generated/api";
+import { api } from "@/convex/_generated/api";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import { filterTaskFolders, filterTaskItems } from "@/app/util/utilities";
 import Actionbar from "@/app/Components/Actionbar";
@@ -26,7 +25,7 @@ import { IconsProvider } from "tabler-dynamic-icon";
 import * as TablerIcons from "@tabler/icons-react";
 import Constants from "@/app/util/constants";
 import { Spinner } from "@/components/ui/spinner";
-import { toDate } from "@/app/util/dateUtilities";
+import { toDateOrUndefined } from "@/app/util/dateUtilities";
 
 export default function Home() {
 	// Queries
@@ -133,7 +132,7 @@ export default function Home() {
 
 			return [...ungroupedItems, ...projectBlocks, ...folderBlocks];
 		}
-	}, [taskItemsForView, taskFoldersForView, allProjects, allTaskFolders, selectedView]);
+	}, [taskItemsForView, taskFoldersForView, allProjects, selectedView]);
 
 	// Mutations
 	const addTaskItem = useMutation(api.taskItems.createTaskItem);
@@ -542,7 +541,7 @@ export default function Home() {
 										.map((project) => ({
 											kind: "data" as const,
 											view: toProjectView(project),
-											deadline: project.deadline,
+											deadline: toDateOrUndefined(project.deadline),
 										})),
 								};
 							} else {
@@ -581,12 +580,7 @@ export default function Home() {
 										:	{
 												kind: "project",
 												view: selectedView,
-												deadline:
-													withProject(selectedView.id)?.deadline ?
-														toDate(
-															withProject(selectedView.id)!.deadline!,
-														)
-													:	undefined,
+												deadline: toDateOrUndefined(withProject(selectedView.id)?.deadline),
 												modifyThis: (mods: ProjectModifications) =>
 													modifyProject(selectedView.id, mods),
 												deleteThis: () => deleteProject(selectedView.id),
