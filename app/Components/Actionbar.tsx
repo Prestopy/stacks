@@ -29,11 +29,15 @@ export default function Actionbar({
 }: ActionbarProps) {
 	return (
 		<div className="min-h-12 bg-slate-800 border-t border-slate-700 flex flex-row justify-center items-center gap-10">
-			<button onClick={createTaskItem}>
+			<button
+				className="disabled:opacity-50"
+				onClick={createTaskItem}
+			>
 				<IconPlus size={20} />
 			</button>
 
 			<button
+				className="disabled:opacity-50"
 				onClick={createTaskFolder}
 				disabled={isFilterView}
 			>
