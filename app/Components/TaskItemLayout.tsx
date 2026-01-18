@@ -77,11 +77,13 @@ export default function TaskItemLayout({
 		>
 			<div className="flex items-center justify-between">
 				<Checkbox
-					className={
-						taskItem.isFlagged ?
-							`border-${Constants.TailwindColors.FLAGGED_PURPLE} ${!isCompleted ? "!bg-purple-900" : ""}`
-						:	undefined
-					}
+					className={taskItem.isFlagged && !isCompleted ? "!bg-purple-900" : undefined}
+					style={{
+						borderColor:
+							taskItem.isFlagged && !isCompleted ?
+								Constants.Colors.FLAGGED_PURPLE
+							:	undefined,
+					}}
 					checked={isCompleted}
 					onClick={(e) => e.stopPropagation()}
 					onCheckedChange={(checked) => {

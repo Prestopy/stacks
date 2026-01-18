@@ -19,17 +19,17 @@ export default class Constants {
 		LATE_RED: "oklch(63.7% 0.237 25.331)", // red-500
 	} as const;
 
-	static TailwindColors = {
-		INBOX_BLUE: "sky-500",
-		TODAY_YELLOW: "yellow-500",
-		EVERYTHING_GREEN: "teal-600",
-		SOMEDAY_BROWN: "[oklch(68%_11%_66)]",
-		SCHEDULED_RED: "pink-500",
-		FLAGGED_PURPLE: "[oklch(66.7%_0.295_322.15)]",
-		COMPLETED_GREEN: "emerald-600",
-
-		LATE_RED: "red-500",
-	}
+	// static TailwindColors = {
+	// 	INBOX_BLUE: "sky-500",
+	// 	TODAY_YELLOW: "yellow-500",
+	// 	EVERYTHING_GREEN: "teal-600",
+	// 	SOMEDAY_BROWN: "[oklch(68%_11%_66)]",
+	// 	SCHEDULED_RED: "pink-500",
+	// 	FLAGGED_PURPLE: "[oklch(66.7%_0.295_322.15)]",
+	// 	COMPLETED_GREEN: "emerald-600",
+	//
+	// 	LATE_RED: "red-500",
+	// }
 
 	static Icons: {
 		[key in string]: IconData;
