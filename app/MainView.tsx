@@ -24,6 +24,8 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useEffect, useRef, useState } from "react";
+import CalendarInputTag from "@/app/Components/CalendarInputTag";
+import { dateToPatch } from "@/app/util/utilities";
 
 interface BaseProps {
 	taskFolders: Doc<"taskFolders">[];
@@ -62,6 +64,8 @@ interface ProjectProps {
 	kind: ProjectView["kind"];
 	modifyThis: (mods: ProjectModifications) => void;
 	deleteThis: () => void;
+
+	deadline: Date | undefined;
 }
 
 interface MainViewProps extends BaseProps {
@@ -70,6 +74,7 @@ interface MainViewProps extends BaseProps {
 
 export default function MainView({
 	options,
+
 	taskFolders,
 	taskItems,
 	selectedTaskItem,
@@ -86,6 +91,31 @@ export default function MainView({
 		>
 			<div className="w-[720] h-full">
 				<TitleBar options={options} />
+
+				{
+					options.kind === "project" && (
+						<div className="flex flex-col mt-5">
+							<div className="border-y border-y-slate-700 py-1">
+								<CalendarInputTag
+									placeholder="Deadline..."
+									date={options.deadline !== undefined ? {
+										kind: "date",
+										value: options.deadline
+									} : undefined}
+									icon={Constants.Icons.DEADLINE}
+									updateDate={(newDate) => {
+										const { value } = dateToPatch(newDate, {
+											allowSomeday: false,
+										});
+										options.modifyThis({
+											deadline: value,
+										});
+									}}
+								/>
+							</div>
+						</div>
+					)
+				}
 
 				<hr className="my-5 px-5 border-none {/*border-2 border-slate-700*/}" />
 				{options.view.layout === "list" ?

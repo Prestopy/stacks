@@ -25,16 +25,31 @@ import { IconsProvider } from "tabler-dynamic-icon";
 import * as TablerIcons from "@tabler/icons-react";
 import Constants from "@/app/util/constants";
 import { Spinner } from "@/components/ui/spinner";
+import { toDate } from "@/app/util/dateUtilities";
 
 export default function Home() {
 	// Queries
 	const allUniverses = useQuery(api.universes.get);
 	const allProjects = useQuery(api.projects.get);
 	const allTaskFolders = useQuery(api.taskFolders.get);
-
 	const allTaskItems: Doc<"taskItems">[] | undefined = useQuery(
 		api.taskItems.get,
 	);
+
+	const withUniverse = (universeId: Id<"universes">) => {
+		return allUniverses?.find((u) => u._id.toString() === universeId.toString());
+	}
+	const withProject = (projectId: Id<"projects">) => {
+		return allProjects?.find((p) => p._id.toString() === projectId.toString());
+	}
+	const withTaskFolder = (taskFolderId: Id<"taskFolders">) => {
+		return allTaskFolders?.find((tf) => tf._id.toString() === taskFolderId.toString());
+	}
+	const withTaskItem = (taskItemId: Id<"taskItems">) => {
+		return allTaskItems?.find((ti) => ti._id.toString() === taskItemId.toString());
+	}
+
+
 
 	// State
 	const [selectedViewId, setSelectedViewId] = useState<ViewId>(
@@ -366,9 +381,7 @@ export default function Home() {
 		// FIXME: Deleting a universe does not delete its projects or tasks for data safety.
 		try {
 			if (allUniverses) {
-				const universe = allUniverses.find(
-					(u) => u._id.toString() === universeId.toString(),
-				);
+				const universe = withUniverse(universeId);
 				if (!universe) throw new Error("Universe not found");
 				const idx = allUniverses.indexOf(universe);
 				const nextIdx = Math.min(allUniverses.length - 2, idx + 1);
@@ -492,6 +505,7 @@ export default function Home() {
 										.map((project) => ({
 											kind: "data" as const,
 											view: toProjectView(project),
+											deadline: project.deadline
 										})),
 								};
 							} else {
@@ -543,6 +557,7 @@ export default function Home() {
 										:	{
 												kind: "project",
 												view: selectedView,
+												deadline: withProject(selectedView.id)?.deadline ? toDate(withProject(selectedView.id)!.deadline!) : undefined,
 												modifyThis: (
 													mods: ProjectModifications,
 												) =>

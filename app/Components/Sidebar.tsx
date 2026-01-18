@@ -224,6 +224,7 @@ interface Data extends BaseData {
 interface ChildData extends BaseData {
 	kind: "data";
 	view: ProjectView;
+	deadline?: Date;
 	childData?: undefined;
 }
 
