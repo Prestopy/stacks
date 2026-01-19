@@ -1,15 +1,12 @@
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import TaskItemLayout from "@/app/Components/TaskItemLayout";
-import {
-	Block,
-	TaskFolderModifications,
-	TaskItemModifications,
-} from "@/app/util/types/types";
+import { Block, TaskFolderModifications, TaskItemModifications } from "@/app/util/types/types";
 import { IconChevronRight, IconPencil, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import RichIcon from "@/app/Components/RichIcon";
 import Constants from "@/app/util/constants";
 import { ViewId } from "@/app/util/types/baseTypes";
+import { Actions } from "@/app/util/types/typeUtilities";
 
 interface ListLayoutProps {
 	isFilterLayout: boolean;
@@ -20,16 +17,16 @@ interface ListLayoutProps {
 	setSelectedTaskItem: (itemId: Id<"taskItems"> | null) => void;
 	setSelectedViewId: (viewId: ViewId) => void;
 
-	modifyTaskItem: (
-		taskId: Id<"taskItems">,
-		modifications: TaskItemModifications,
-	) => void;
-
-	modifyTaskFolder: (
-		folderId: Id<"taskFolders">,
-		mods: TaskFolderModifications,
-	) => void;
-	deleteTaskFolder: (id: Id<"taskFolders">) => void;
+	taskItemActions: Actions<
+		null,
+		(taskId: Id<"taskItems">, modifications: TaskItemModifications) => void,
+		null
+	>;
+	taskFolderActions: Actions<
+		null,
+		(id: Id<"taskFolders">, mods: TaskFolderModifications) => void,
+		(id: Id<"taskFolders">) => void
+	>;
 }
 
 export default function ListLayout(props: ListLayoutProps) {
@@ -43,18 +40,16 @@ export default function ListLayout(props: ListLayoutProps) {
 }
 
 function BlockRenderer({
-	                       block,
-	                       selectedTaskItem,
-	                       setSelectedTaskItem,
-	                       setSelectedViewId,
-	                       modifyTaskItem,
-	                       modifyTaskFolder,
-	                       deleteTaskFolder,
-                       }: {
-	block: Block
+	block,
+	selectedTaskItem,
+	setSelectedTaskItem,
+	setSelectedViewId,
+	taskItemActions,
+	taskFolderActions,
+}: {
+	block: Block;
 } & Omit<ListLayoutProps, "blocks" | "isFilterLayout">) {
-	const [editingFolderId, setEditingFolderId] =
-		useState<Id<"taskFolders"> | null>(null);
+	const [editingFolderId, setEditingFolderId] = useState<Id<"taskFolders"> | null>(null);
 	const [tempFolderTitle, setTempFolderTitle] = useState("");
 
 	if (block.kind === "project") {
@@ -62,13 +57,12 @@ function BlockRenderer({
 			<div className="mt-8 select-none rounded-md">
 				<div className="group flex flex-row items-center gap-4 px-3">
 					<RichIcon
-						iconData={Constants.DynamicIcons.PROJECT(
-							block.value.color,
-						)} size={24}
+						iconData={Constants.DynamicIcons.PROJECT(block.value.color)}
+						size={24}
 					/>
 
 					<div className="flex flex-row items-center">
-						<h2 className='text-xl font-bold'>{block.value.title}</h2>
+						<h2 className="text-xl font-bold">{block.value.title}</h2>
 						<button
 							className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white duration-100"
 							onClick={() => setSelectedViewId(block.value._id)}
@@ -87,13 +81,13 @@ function BlockRenderer({
 						selectedTaskItem={selectedTaskItem}
 						setSelectedTaskItem={setSelectedTaskItem}
 						setSelectedViewId={setSelectedViewId}
-						modifyTaskItem={modifyTaskItem}
-						modifyTaskFolder={modifyTaskFolder}
-						deleteTaskFolder={deleteTaskFolder}
+
+						taskFolderActions={taskFolderActions}
+						taskItemActions={taskItemActions}
 					/>
 				))}
 			</div>
-		)
+		);
 	}
 
 	if (block.kind === "taskFolder") {
@@ -102,10 +96,9 @@ function BlockRenderer({
 		return (
 			<div className="mt-8 select-none">
 				<div className="group flex justify-between px-4">
-					{editingFolderId !== folder._id ? (
+					{editingFolderId !== folder._id ?
 						<h2 className="text-xl font-bold">{folder.title}</h2>
-					) : (
-						<div className="flex gap-2">
+					:	<div className="flex gap-2">
 							<input
 								className="text-xl font-bold bg-slate-800 text-white rounded-md px-2 py-1"
 								value={tempFolderTitle}
@@ -114,7 +107,7 @@ function BlockRenderer({
 							/>
 							<button
 								onClick={() => {
-									modifyTaskFolder(folder._id, {
+									taskFolderActions.modify(folder._id, {
 										title: tempFolderTitle,
 									});
 									setEditingFolderId(null);
@@ -124,7 +117,7 @@ function BlockRenderer({
 								Save
 							</button>
 						</div>
-					)}
+					}
 
 					<div className="flex gap-2">
 						<button
@@ -138,7 +131,7 @@ function BlockRenderer({
 						</button>
 						<button
 							className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 duration-100"
-							onClick={() => deleteTaskFolder(folder._id)}
+							onClick={() => taskFolderActions.delete(folder._id)}
 						>
 							<IconTrash size={16} />
 						</button>
@@ -154,9 +147,9 @@ function BlockRenderer({
 						selectedTaskItem={selectedTaskItem}
 						setSelectedTaskItem={setSelectedTaskItem}
 						setSelectedViewId={setSelectedViewId}
-						modifyTaskItem={modifyTaskItem}
-						modifyTaskFolder={modifyTaskFolder}
-						deleteTaskFolder={deleteTaskFolder}
+
+						taskFolderActions={taskFolderActions}
+						taskItemActions={taskItemActions}
 					/>
 				))}
 			</div>
@@ -170,7 +163,7 @@ function BlockRenderer({
 			<TaskItemLayout
 				taskItem={item}
 				isSelected={selectedTaskItem === item._id}
-				modifyThis={(mods) => modifyTaskItem(item._id, mods)}
+				modifyThis={(mods) => taskItemActions.modify(item._id, mods)}
 				selectThis={() => setSelectedTaskItem(item._id)}
 			/>
 		);

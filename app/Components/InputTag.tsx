@@ -1,6 +1,4 @@
-import { IconBackspace } from "@tabler/icons-react";
 import RichIcon from "@/app/Components/RichIcon";
-import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import * as React from "react";
 import { IconData } from "@/app/util/types/baseTypes";
 

@@ -5,11 +5,12 @@ import MainView from "@/app/MainView";
 import { useMemo, useState } from "react";
 import {
 	ProjectBlock,
-	ProjectModifications, TaskFolderBlock,
-	TaskFolderModifications, TaskItemBlock,
+	ProjectModifications,
+	TaskFolderBlock,
+	TaskFolderModifications,
+	TaskItemBlock,
 	TaskItemModifications,
 	UniverseModifications,
-
 } from "@/app/util/types/types";
 
 import { useMutation, useQuery } from "convex/react";
@@ -50,6 +51,36 @@ export default function Home() {
 	const [selectedViewId, setSelectedViewId] = useState<ViewId>(Constants.FilterViews.INBOX.id);
 	const [selectedTaskItem, setSelectedTaskItem] = useState<Id<"taskItems"> | null>(null);
 
+	const viewHierarchy = useMemo(() => {
+		if (allUniverses === undefined || allProjects === undefined) return [];
+		return allUniverses.map((universe) => {
+			if (
+				allProjects.some(
+					(project) => project.parentUniverse.toString() === universe._id.toString(),
+				)
+			) {
+				return {
+					kind: "data" as const,
+					view: toUniverseView(universe),
+					childData: allProjects
+						.filter(
+							(project) =>
+								project.parentUniverse.toString() === universe._id.toString(),
+						)
+						.map((project) => ({
+							kind: "data" as const,
+							view: toProjectView(project),
+							deadline: toDateOrUndefined(project.deadline),
+						})),
+				};
+			} else {
+				return {
+					kind: "data" as const,
+					view: toUniverseView(universe),
+				};
+			}
+		});
+	}, [allUniverses, allProjects]);
 	const selectedView = useMemo(() => {
 		const defaultView = Constants.FilterViews.INBOX;
 		if (!allUniverses || !allProjects) {
@@ -60,6 +91,7 @@ export default function Home() {
 		if (!view) return defaultView;
 		return view;
 	}, [selectedViewId, allUniverses, allProjects]);
+
 	const taskItemsForView = useMemo(
 		() => filterTaskItems(allTaskItems ?? [], selectedView),
 		[allTaskItems, selectedView],
@@ -71,7 +103,6 @@ export default function Home() {
 			return [];
 		}
 	}, [allTaskFolders, selectedView]);
-
 	const blocksForView = useMemo(() => {
 		// All item blocks
 		const itemBlocks: TaskItemBlock[] = taskItemsForView.map((item) => ({
@@ -90,27 +121,28 @@ export default function Home() {
 				// Find items in this folder
 				folderBlock.children = itemBlocks.filter(
 					(itemBlock) =>
-						itemBlock.value.parentTaskFolder?.toString() === folderBlock.value._id.toString()
+						itemBlock.value.parentTaskFolder?.toString() ===
+						folderBlock.value._id.toString(),
 				);
 			}
 
 			// items not in folders
-			const ungroupedItems = itemBlocks.filter((itemBlock) =>
-				!itemBlock.value.parentTaskFolder
+			const ungroupedItems = itemBlocks.filter(
+				(itemBlock) => !itemBlock.value.parentTaskFolder,
 			);
 
 			return [...ungroupedItems, ...folderBlocks];
-		} else { // filter (system) view
+		} else {
+			// filter (system) view
 			// Folder blocks for any folders that contain items in the current view
-			const folderBlocks: TaskFolderBlock[] = taskFoldersForView
-				.map((folder) => ({
-					kind: "taskFolder" as const,
-					value: folder,
-					children: itemBlocks.filter(
-						(itemBlock) =>
-							itemBlock.value.parentTaskFolder?.toString() === folder._id.toString()
-					),
-				}))
+			const folderBlocks: TaskFolderBlock[] = taskFoldersForView.map((folder) => ({
+				kind: "taskFolder" as const,
+				value: folder,
+				children: itemBlocks.filter(
+					(itemBlock) =>
+						itemBlock.value.parentTaskFolder?.toString() === folder._id.toString(),
+				),
+			}));
 
 			// Project blocks only for projects that have items in the current view
 			const projectBlocks: ProjectBlock[] = (allProjects ?? [])
@@ -119,14 +151,14 @@ export default function Home() {
 					value: project,
 					children: itemBlocks.filter(
 						(itemBlock) =>
-							itemBlock.value.parentProject?.toString() === project._id.toString()
+							itemBlock.value.parentProject?.toString() === project._id.toString(),
 					),
 				}))
 				.filter((pb) => pb.children.length > 0);
 
 			// items not in projects and not in folders
-			const ungroupedItems = itemBlocks.filter((itemBlock) =>
-				!itemBlock.value.parentProject && !itemBlock.value.parentTaskFolder
+			const ungroupedItems = itemBlocks.filter(
+				(itemBlock) => !itemBlock.value.parentProject && !itemBlock.value.parentTaskFolder,
 			);
 
 			return [...ungroupedItems, ...projectBlocks, ...folderBlocks];
@@ -347,7 +379,8 @@ export default function Home() {
 
 	const createTaskFolder = async (view: TaskView) => {
 		try {
-			if (view.kind === "systemFilter") throw new Error("Cannot create folders in filter views");
+			if (view.kind === "systemFilter")
+				throw new Error("Cannot create folders in filter views");
 
 			const taskFolderId = await addTaskFolder({
 				data: {
@@ -522,43 +555,20 @@ export default function Home() {
 								view: Constants.FilterViews.COMPLETED,
 							},
 						]}
-						userSections={allUniverses.map((universe) => {
-							if (
-								allProjects.some(
-									(project) =>
-										project.parentUniverse.toString() ===
-										universe._id.toString(),
-								)
-							) {
-								return {
-									kind: "data" as const,
-									view: toUniverseView(universe),
-									childData: allProjects
-										.filter(
-											(project) =>
-												project.parentUniverse.toString() ===
-												universe._id.toString(),
-										)
-										.map((project) => ({
-											kind: "data" as const,
-											view: toProjectView(project),
-											deadline: toDateOrUndefined(project.deadline),
-										})),
-								};
-							} else {
-								return {
-									kind: "data" as const,
-									view: toUniverseView(universe),
-								};
-							}
-						})}
-
+						userSections={viewHierarchy}
 						selectedView={selectedView}
 						setSelectedViewId={setSelectedViewId}
-						createUniverse={createUniverse}
-						createProject={createProject}
-						deleteUniverse={deleteUniverse}
-						deleteProject={deleteProject}
+
+						universeActions={{
+							create: createUniverse,
+							modify: null,
+							delete: deleteUniverse,
+						}}
+						projectActions={{
+							create: createProject,
+							modify: null,
+							delete: deleteProject,
+						}}
 					/>
 
 					{taskItemsForView !== undefined && taskFoldersForView !== undefined ?
@@ -582,7 +592,9 @@ export default function Home() {
 										:	{
 												kind: "project",
 												view: selectedView,
-												deadline: toDateOrUndefined(withProject(selectedView.id)?.deadline),
+												deadline: toDateOrUndefined(
+													withProject(selectedView.id)?.deadline,
+												),
 												modifyThis: (mods: ProjectModifications) =>
 													modifyProject(selectedView.id, mods),
 												deleteThis: () => deleteProject(selectedView.id),
@@ -593,9 +605,17 @@ export default function Home() {
 									selectedTaskItem={selectedTaskItem}
 									setSelectedTaskItem={setSelectedTaskItem}
 									setSelectedViewId={setSelectedViewId}
-									modifyTaskItem={modifyTaskItem}
-									modifyTaskFolder={modifyTaskFolder}
-									deleteTaskFolder={deleteTaskFolder}
+
+									taskItemActions={{
+										create: null,
+										modify: modifyTaskItem,
+										delete: null,
+									}}
+									taskFolderActions={{
+										create: null,
+										modify: modifyTaskFolder,
+										delete: deleteTaskFolder,
+									}}
 								/>
 							</div>
 							<div className="shrink-0">
@@ -603,25 +623,21 @@ export default function Home() {
 									universes={allUniverses}
 									projects={allProjects}
 									taskFolders={taskFoldersForView}
-
 									isFilterView={selectedView.kind === "systemFilter"}
 									isTaskItemSelected={selectedTaskItem !== null}
-
 									createTaskItem={() => createTaskItem(selectedView)}
 									createTaskFolder={() => createTaskFolder(selectedView)}
 									modifySelectedTaskItem={(mods: TaskItemModifications) => {
-										if (selectedTaskItem !== null) {
+										if (selectedTaskItem !== null)
 											return modifyTaskItem(selectedTaskItem, mods);
-										}
+										return Promise.reject();
 									}}
 									deleteSelectedTaskItem={() => {
-										let promise = Promise.resolve();
 										if (selectedTaskItem !== null) {
-											promise = deleteTaskItem(selectedTaskItem);
 											setSelectedTaskItem(null);
+											return deleteTaskItem(selectedTaskItem);
 										}
-
-										return promise;
+										return Promise.reject();
 									}}
 								/>
 							</div>

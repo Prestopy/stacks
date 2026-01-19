@@ -15,7 +15,7 @@ interface ActionbarProps {
 	createTaskItem: () => Promise<void>;
 	createTaskFolder: () => Promise<void>;
 
-	modifySelectedTaskItem: (mods: TaskItemModifications) => void,
+	modifySelectedTaskItem: (mods: TaskItemModifications) => Promise<void>,
 	deleteSelectedTaskItem: () => Promise<void>;
 }
 

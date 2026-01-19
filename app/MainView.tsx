@@ -9,7 +9,7 @@ import {
 	UniverseModifications,
 	UniverseView,
 } from "@/app/util/types/types";
-import { Doc, Id } from "@/convex/_generated/dataModel";
+import { Id } from "@/convex/_generated/dataModel";
 import RichIcon from "@/app/Components/RichIcon";
 import Constants from "@/app/util/constants";
 import {
@@ -28,6 +28,7 @@ import { useEffect, useRef, useState } from "react";
 import CalendarInputTag from "@/app/Components/CalendarInputTag";
 import { dateToPatch } from "@/app/util/utilities";
 import { ViewId } from "@/app/util/types/baseTypes";
+import { Actions } from "@/app/util/types/typeUtilities";
 
 
 interface BaseProps {
@@ -38,16 +39,17 @@ interface BaseProps {
 
 	setSelectedTaskItem: (itemId: Id<"taskItems"> | null) => void;
 	setSelectedViewId: (viewId: ViewId) => void;
-	modifyTaskItem: (
-		taskId: Id<"taskItems">,
-		modifications: TaskItemModifications,
-	) => void;
 
-	modifyTaskFolder: (
-		id: Id<"taskFolders">,
-		mods: TaskFolderModifications,
-	) => void;
-	deleteTaskFolder: (id: Id<"taskFolders">) => void;
+	taskItemActions: Actions<
+		null,
+		(taskId: Id<"taskItems">, modifications: TaskItemModifications) => void,
+		null
+	>;
+	taskFolderActions: Actions<
+		null,
+		(id: Id<"taskFolders">, mods: TaskFolderModifications) => void,
+		(id: Id<"taskFolders">) => void
+	>;
 }
 
 interface SystemFilterProps {
@@ -83,10 +85,9 @@ export default function MainView({
 	selectedTaskItem,
 	setSelectedTaskItem,
 	setSelectedViewId,
-	modifyTaskItem,
 
-	modifyTaskFolder,
-	deleteTaskFolder,
+	taskItemActions,
+	taskFolderActions,
 }: MainViewProps) {
 	return (
 		<div
@@ -135,9 +136,9 @@ export default function MainView({
 							selectedTaskItem={selectedTaskItem}
 							setSelectedTaskItem={setSelectedTaskItem}
 							setSelectedViewId={setSelectedViewId}
-							modifyTaskItem={modifyTaskItem}
-							modifyTaskFolder={modifyTaskFolder}
-							deleteTaskFolder={deleteTaskFolder}
+
+							taskItemActions={taskItemActions}
+							taskFolderActions={taskFolderActions}
 						/>
 						:	<div>Schedule View (to be implemented)</div>}
 				</div>
