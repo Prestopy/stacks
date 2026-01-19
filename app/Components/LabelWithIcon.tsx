@@ -1,6 +1,6 @@
 import RichIcon from "@/app/Components/RichIcon";
-import { IconData } from "@/app/util/types";
 import { ReactNode } from "react";
+import { IconData } from "@/app/util/types/baseTypes";
 
 interface IconLabel {
 	iconData: IconData;

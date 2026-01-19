@@ -4,16 +4,13 @@ import Sidebar from "@/app/Components/Sidebar";
 import MainView from "@/app/MainView";
 import { useMemo, useState } from "react";
 import {
-	getViewFromId, ProjectBlock,
+	ProjectBlock,
 	ProjectModifications, TaskFolderBlock,
 	TaskFolderModifications, TaskItemBlock,
 	TaskItemModifications,
-	TaskView,
-	toProjectView,
-	toUniverseView,
 	UniverseModifications,
-	ViewId,
-} from "@/app/util/types";
+
+} from "@/app/util/types/types";
 
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -26,6 +23,8 @@ import * as TablerIcons from "@tabler/icons-react";
 import Constants from "@/app/util/constants";
 import { Spinner } from "@/components/ui/spinner";
 import { toDateOrUndefined } from "@/app/util/dateUtilities";
+import { TaskView, ViewId } from "@/app/util/types/baseTypes";
+import { getViewFromId, toProjectView, toUniverseView } from "@/app/util/conversionLayers";
 
 export default function Home() {
 	// Queries
@@ -310,9 +309,9 @@ export default function Home() {
 			const taskId = await addTaskItem({
 				data: {
 					title: "",
-					isCompleted: view.kind === "system_filter" && view.id === "completed",
-					isFlagged: view.kind === "system_filter" && view.id === "flagged",
-					isSomeday: view.kind === "system_filter" && view.id === "someday",
+					isCompleted: view.kind === "systemFilter" && view.id === "completed",
+					isFlagged: view.kind === "systemFilter" && view.id === "flagged",
+					isSomeday: view.kind === "systemFilter" && view.id === "someday",
 				},
 				_parentUniverseId: view.kind === "universe" ? view.id : undefined,
 				_parentProjectId: view.kind === "project" ? view.id : undefined,
@@ -348,7 +347,7 @@ export default function Home() {
 
 	const createTaskFolder = async (view: TaskView) => {
 		try {
-			if (view.kind === "system_filter") throw new Error("Cannot create folders in filter views");
+			if (view.kind === "systemFilter") throw new Error("Cannot create folders in filter views");
 
 			const taskFolderId = await addTaskFolder({
 				data: {
@@ -500,7 +499,7 @@ export default function Home() {
 			<div className="w-screen h-screen">
 				<div className="flex flex-row gap-0">
 					<Sidebar
-						systemBlocks={[
+						systemSections={[
 							{ kind: "data", view: Constants.FilterViews.INBOX },
 							{ kind: "spacer" },
 							{ kind: "data", view: Constants.FilterViews.TODAY },
@@ -523,7 +522,7 @@ export default function Home() {
 								view: Constants.FilterViews.COMPLETED,
 							},
 						]}
-						userBlocks={allUniverses.map((universe) => {
+						userSections={allUniverses.map((universe) => {
 							if (
 								allProjects.some(
 									(project) =>
@@ -553,6 +552,7 @@ export default function Home() {
 								};
 							}
 						})}
+
 						selectedView={selectedView}
 						setSelectedViewId={setSelectedViewId}
 						createUniverse={createUniverse}
@@ -566,9 +566,9 @@ export default function Home() {
 							<div className="flex-1 flex overflow-auto">
 								<MainView
 									options={
-										selectedView.kind === "system_filter" ?
+										selectedView.kind === "systemFilter" ?
 											{
-												kind: "system_filter",
+												kind: "systemFilter",
 												view: selectedView,
 											}
 										: selectedView.kind === "universe" ?
@@ -590,10 +590,9 @@ export default function Home() {
 
 									}
 									blocks={blocksForView}
-									// taskFolders={taskFoldersForView}
-									// taskItems={taskItemsForView}
 									selectedTaskItem={selectedTaskItem}
 									setSelectedTaskItem={setSelectedTaskItem}
+									setSelectedViewId={setSelectedViewId}
 									modifyTaskItem={modifyTaskItem}
 									modifyTaskFolder={modifyTaskFolder}
 									deleteTaskFolder={deleteTaskFolder}
@@ -601,9 +600,11 @@ export default function Home() {
 							</div>
 							<div className="shrink-0">
 								<Actionbar
+									universes={allUniverses}
+									projects={allProjects}
 									taskFolders={taskFoldersForView}
 
-									isFilterView={selectedView.kind === "system_filter"}
+									isFilterView={selectedView.kind === "systemFilter"}
 									isTaskItemSelected={selectedTaskItem !== null}
 
 									createTaskItem={() => createTaskItem(selectedView)}

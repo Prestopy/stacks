@@ -1,9 +1,12 @@
 import { IconFolderPlus, IconFolderSymlink, IconPlus, IconTrash } from "@tabler/icons-react";
-import { TaskItemModifications, TaskLocation } from "@/app/util/types";
+import { TaskItemModifications, TaskLocation } from "@/app/util/types/types";
 import MoveInputDialog from "@/app/Components/MoveInputDialog";
 import { Doc } from "@/convex/_generated/dataModel";
+import Constants from "@/app/util/constants";
 
 interface ActionbarProps {
+	projects: Doc<"projects">[];
+	universes: Doc<"universes">[];
 	taskFolders: Doc<"taskFolders">[];
 
 	isFilterView?: boolean;
@@ -17,6 +20,8 @@ interface ActionbarProps {
 }
 
 export default function Actionbar({
+	projects,
+	universes,
 	taskFolders,
 
 	isFilterView,
@@ -47,14 +52,32 @@ export default function Actionbar({
 			<div className="h-1/2 w-[1px] bg-slate-700" />
 
 			<MoveInputDialog
-				locations={taskFolders.map(
-					(folder) => ({
-						kind: "folder",
-						_id: folder._id,
-						title: folder.title,
-						iconName: "IconFolder",
-					}),
-				)}
+				locations={[
+					...taskFolders.map(
+						(folder) => ({
+							kind: "taskFolder" as const,
+							id: folder._id,
+							title: folder.title,
+							iconName: "IconFolder",
+						}),
+					),
+					...universes.map(
+						(universe) => ({
+							kind: "universe" as const,
+							id: universe._id,
+							title: universe.title,
+							iconName: universe.iconName ?? "", // FIXME
+						}),
+					),
+					...projects.map(
+						(project) => ({
+							kind: "project" as const,
+							id: project._id,
+							title: project.title,
+							iconName: Constants.DynamicIcons.PROJECT(project.color).name,
+						}),
+					),
+				]}
 				move={(loc: TaskLocation | null) => {
 					if (loc === null) {
 						modifySelectedTaskItem({
@@ -63,19 +86,19 @@ export default function Actionbar({
 						return;
 					}
 					switch (loc.kind) {
-						case "folder":
+						case "taskFolder":
 							modifySelectedTaskItem({
-								parentTaskFolder: loc._id,
+								parentTaskFolder: loc.id,
 							});
 							break;
 						case "project":
 							modifySelectedTaskItem({
-								parentProject: loc._id,
+								parentProject: loc.id,
 							});
 							break;
 						case "universe":
 							modifySelectedTaskItem({
-								parentUniverse: loc._id,
+								parentUniverse: loc.id,
 							});
 							break;
 					}

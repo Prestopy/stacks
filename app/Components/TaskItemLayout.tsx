@@ -1,6 +1,6 @@
 import { Doc } from "@/convex/_generated/dataModel";
 import { useEffect, useRef, useState } from "react";
-import { DateOrSomeday, TaskItemModifications } from "@/app/util/types";
+import { TaskItemModifications } from "@/app/util/types/types";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
 	bigintToDateOrUndefined,
@@ -25,6 +25,7 @@ import {
 import LabelWithIcon from "@/app/Components/LabelWithIcon";
 import dayjs from "dayjs";
 import RichIcon from "@/app/Components/RichIcon";
+import { DateOrSomeday } from "@/app/util/types/baseTypes";
 
 interface TaskItemLayoutProps {
 	taskItem: Doc<"taskItems">;

@@ -8,7 +8,7 @@ import {
 	TaskItemModifications,
 	UniverseModifications,
 	UniverseView,
-} from "@/app/util/types";
+} from "@/app/util/types/types";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import RichIcon from "@/app/Components/RichIcon";
 import Constants from "@/app/util/constants";
@@ -27,6 +27,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import CalendarInputTag from "@/app/Components/CalendarInputTag";
 import { dateToPatch } from "@/app/util/utilities";
+import { ViewId } from "@/app/util/types/baseTypes";
 
 
 interface BaseProps {
@@ -36,6 +37,7 @@ interface BaseProps {
 	selectedTaskItem: Id<"taskItems"> | null;
 
 	setSelectedTaskItem: (itemId: Id<"taskItems"> | null) => void;
+	setSelectedViewId: (viewId: ViewId) => void;
 	modifyTaskItem: (
 		taskId: Id<"taskItems">,
 		modifications: TaskItemModifications,
@@ -80,6 +82,7 @@ export default function MainView({
 
 	selectedTaskItem,
 	setSelectedTaskItem,
+	setSelectedViewId,
 	modifyTaskItem,
 
 	modifyTaskFolder,
@@ -93,7 +96,7 @@ export default function MainView({
 			}}
 			onClick={() => setSelectedTaskItem(null)}
 		>
-			<div className="w-[720] h-full pb-20">
+			<div className="w-[720] h-full">
 				<TitleBar options={options} />
 
 				{
@@ -122,19 +125,22 @@ export default function MainView({
 				}
 
 				<hr className="my-5 px-5 border-none" />
-				{options.view.layout === "list" ?
-					<ListLayout
-						isFilterLayout={options.view.kind === "system_filter"}
+				<div className="pb-20">
+					{options.view.layout === "list" ?
+						<ListLayout
+							isFilterLayout={options.view.kind === "systemFilter"}
 
-						blocks={blocks}
+							blocks={blocks}
 
-						selectedTaskItem={selectedTaskItem}
-						setSelectedTaskItem={setSelectedTaskItem}
-						modifyTaskItem={modifyTaskItem}
-						modifyTaskFolder={modifyTaskFolder}
-						deleteTaskFolder={deleteTaskFolder}
-					/>
-				:	<div>Schedule View (to be implemented)</div>}
+							selectedTaskItem={selectedTaskItem}
+							setSelectedTaskItem={setSelectedTaskItem}
+							setSelectedViewId={setSelectedViewId}
+							modifyTaskItem={modifyTaskItem}
+							modifyTaskFolder={modifyTaskFolder}
+							deleteTaskFolder={deleteTaskFolder}
+						/>
+						:	<div>Schedule View (to be implemented)</div>}
+				</div>
 			</div>
 		</div>
 	);
@@ -175,7 +181,7 @@ function TitleBar({ options }: TitleBarProps) {
 	}, [editingTextField]);
 
 	const saveTextFields = () => {
-		if (options.kind === "system_filter") return;
+		if (options.kind === "systemFilter") return;
 		options.modifyThis({
 			title: tempTextFieldsRef.current.title,
 			description: tempTextFieldsRef.current.description,
@@ -248,7 +254,7 @@ function TitleBar({ options }: TitleBarProps) {
 					</h1>
 				}
 
-				{options.view.kind !== "system_filter" ?
+				{options.view.kind !== "systemFilter" ?
 					<DropdownMenu>
 						<DropdownMenuTrigger className="text-slate-400 hover:text-white duration-100">
 							<IconDots size={24} />

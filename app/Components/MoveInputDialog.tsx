@@ -1,7 +1,7 @@
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { IconX } from "@tabler/icons-react";
 import LocationSelector from "@/app/Components/LocationSelector";
-import { TaskLocation } from "@/app/util/types";
+import { TaskLocation } from "@/app/util/types/types";
 import { useState } from "react";
 import * as React from "react";
 

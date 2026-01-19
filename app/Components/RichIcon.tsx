@@ -1,5 +1,5 @@
-import { IconData } from "@/app/util/types";
 import { Icon, IconsName } from "tabler-dynamic-icon";
+import { IconData } from "@/app/util/types/baseTypes";
 
 interface RichIconProps {
 	iconData: IconData;

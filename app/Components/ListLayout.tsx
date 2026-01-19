@@ -4,11 +4,12 @@ import {
 	Block,
 	TaskFolderModifications,
 	TaskItemModifications,
-} from "@/app/util/types";
-import { IconPencil, IconTrash } from "@tabler/icons-react";
+} from "@/app/util/types/types";
+import { IconChevronRight, IconPencil, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import RichIcon from "@/app/Components/RichIcon";
 import Constants from "@/app/util/constants";
+import { ViewId } from "@/app/util/types/baseTypes";
 
 interface ListLayoutProps {
 	isFilterLayout: boolean;
@@ -17,6 +18,7 @@ interface ListLayoutProps {
 
 	selectedTaskItem: Id<"taskItems"> | null;
 	setSelectedTaskItem: (itemId: Id<"taskItems"> | null) => void;
+	setSelectedViewId: (viewId: ViewId) => void;
 
 	modifyTaskItem: (
 		taskId: Id<"taskItems">,
@@ -44,6 +46,7 @@ function BlockRenderer({
 	                       block,
 	                       selectedTaskItem,
 	                       setSelectedTaskItem,
+	                       setSelectedViewId,
 	                       modifyTaskItem,
 	                       modifyTaskFolder,
 	                       deleteTaskFolder,
@@ -57,12 +60,22 @@ function BlockRenderer({
 	if (block.kind === "project") {
 		return (
 			<div className="mt-8 select-none rounded-md">
-				<div className="flex flex-row items-center gap-4 px-3">
-					<RichIcon iconData={Constants.DynamicIcons.PROJECT(
-						block.value.color,
-					)} size={24} />
+				<div className="group flex flex-row items-center gap-4 px-3">
+					<RichIcon
+						iconData={Constants.DynamicIcons.PROJECT(
+							block.value.color,
+						)} size={24}
+					/>
 
-					<h2 className='text-xl font-bold'>{block.value.title}</h2>
+					<div className="flex flex-row items-center">
+						<h2 className='text-xl font-bold'>{block.value.title}</h2>
+						<button
+							className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white duration-100"
+							onClick={() => setSelectedViewId(block.value._id)}
+						>
+							<IconChevronRight size={24} />
+						</button>
+					</div>
 				</div>
 
 				<hr className="mt-2 mb-4 border-slate-700" />
@@ -73,6 +86,7 @@ function BlockRenderer({
 						block={child}
 						selectedTaskItem={selectedTaskItem}
 						setSelectedTaskItem={setSelectedTaskItem}
+						setSelectedViewId={setSelectedViewId}
 						modifyTaskItem={modifyTaskItem}
 						modifyTaskFolder={modifyTaskFolder}
 						deleteTaskFolder={deleteTaskFolder}
@@ -114,7 +128,7 @@ function BlockRenderer({
 
 					<div className="flex gap-2">
 						<button
-							className="opacity-0 group-hover:opacity-100"
+							className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-white duration-100"
 							onClick={() => {
 								setEditingFolderId(folder._id);
 								setTempFolderTitle(folder.title);
@@ -123,7 +137,7 @@ function BlockRenderer({
 							<IconPencil size={16} />
 						</button>
 						<button
-							className="opacity-0 group-hover:opacity-100 text-red-500"
+							className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 duration-100"
 							onClick={() => deleteTaskFolder(folder._id)}
 						>
 							<IconTrash size={16} />
@@ -139,6 +153,7 @@ function BlockRenderer({
 						block={child}
 						selectedTaskItem={selectedTaskItem}
 						setSelectedTaskItem={setSelectedTaskItem}
+						setSelectedViewId={setSelectedViewId}
 						modifyTaskItem={modifyTaskItem}
 						modifyTaskFolder={modifyTaskFolder}
 						deleteTaskFolder={deleteTaskFolder}

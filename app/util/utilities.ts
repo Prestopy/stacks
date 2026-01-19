@@ -1,10 +1,9 @@
 import { Doc } from "@/convex/_generated/dataModel";
 import {
-	DateOrSomeday,
 	ProjectView,
-	TaskView,
 	UniverseView,
-} from "@/app/util/types";
+} from "@/app/util/types/types";
+import { DateOrSomeday, TaskView } from "@/app/util/types/baseTypes";
 
 export function capitalize(str: string) {
 	if (str.length === 0) return str;
@@ -14,7 +13,7 @@ export function capitalize(str: string) {
 export function filterTaskItems(taskItems: Doc<"taskItems">[], view: TaskView) {
 	const filteredTodos = taskItems;
 
-	if (view.kind === "system_filter") {
+	if (view.kind === "systemFilter") {
 		switch (view.id) {
 			case "inbox":
 				return filteredTodos.filter(

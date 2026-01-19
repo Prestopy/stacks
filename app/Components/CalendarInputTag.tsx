@@ -2,7 +2,6 @@ import DateSelector, {
 	DropdownCalendarOptions,
 } from "@/app/Components/DateSelector";
 import InputTag from "@/app/Components/InputTag";
-import { DateOrSomeday, IconData } from "@/app/util/types";
 import { useState } from "react";
 import { getDifferenceInDaysAsString, isExactDate, isLate } from "@/app/util/dateUtilities";
 import {
@@ -11,6 +10,7 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import * as React from "react";
+import { DateOrSomeday, IconData } from "@/app/util/types/baseTypes";
 
 interface CalendarInputTagProps {
 	date: DateOrSomeday | undefined;

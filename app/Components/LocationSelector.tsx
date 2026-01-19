@@ -1,7 +1,7 @@
 import { IconTrash } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import RichIcon from "@/app/Components/RichIcon";
-import { TaskLocation } from "@/app/util/types";
+import { TaskLocation } from "@/app/util/types/types";
 
 interface LocationSelectorProps {
 	open: boolean;
@@ -24,7 +24,7 @@ export default function LocationSelector({
 	});
 
 	return (
-		<div className="flex flex-col bg-slate-900">
+		<div className="flex flex-col">
 			<input
 				type="text"
 				value={searchTerm}
@@ -42,7 +42,7 @@ export default function LocationSelector({
 				<div className="flex flex-col px-2 mb-2">
 					{filteredLocations.map((location) => (
 						<button
-							key={location._id}
+							key={location.id}
 							className={`px-2 py-1 text-sm disabled:opacity-50 not-disabled:hover:bg-slate-800 text-center w-full flex flex-row gap-2 justify-center items-center duration-100 rounded-sm`}
 							onClick={() => move(location)}
 						>

@@ -1,5 +1,6 @@
 import { Id } from "@/convex/_generated/dataModel";
-import { FilterView, IconData } from "@/app/util/types";
+import { FilterView } from "@/app/util/types/types";
+import { IconData } from "@/app/util/types/baseTypes";
 
 export default class Constants {
 	static DEBUG_USER_ID: Id<"users"> =
@@ -43,7 +44,7 @@ export default class Constants {
 			color: Constants.Colors.TODAY_YELLOW,
 		},
 		EVERYTHING: {
-			name: "IconStarFilled",
+			name: "IconStack2Filled",
 			color: Constants.Colors.EVERYTHING_GREEN,
 		},
 		SOMEDAY: {
@@ -51,7 +52,7 @@ export default class Constants {
 			color: Constants.Colors.SOMEDAY_BROWN,
 		},
 		SCHEDULED: {
-			name: "IconCalendarWeek",
+			name: "IconCalendarWeekFilled",
 			color: Constants.Colors.SCHEDULED_RED,
 		},
 		UNFLAGGED: {
@@ -88,7 +89,7 @@ export default class Constants {
 
 	static FilterViews: Record<string, FilterView> = {
 		INBOX: {
-			kind: "system_filter",
+			kind: "systemFilter",
 			id: "inbox",
 
 			iconName: Constants.Icons.INBOX.name,
@@ -99,7 +100,7 @@ export default class Constants {
 			layout: "list",
 		},
 		TODAY: {
-			kind: "system_filter",
+			kind: "systemFilter",
 			id: "today",
 
 			iconName: Constants.Icons.TODAY.name,
@@ -110,7 +111,7 @@ export default class Constants {
 			layout: "list",
 		},
 		EVERYTHING: {
-			kind: "system_filter",
+			kind: "systemFilter",
 			id: "everything",
 
 			iconName: Constants.Icons.EVERYTHING.name,
@@ -121,7 +122,7 @@ export default class Constants {
 			layout: "list",
 		},
 		FLAGGED: {
-			kind: "system_filter",
+			kind: "systemFilter",
 			id: "flagged",
 
 			iconName: Constants.Icons.FLAGGED.name,
@@ -132,7 +133,7 @@ export default class Constants {
 			layout: "list",
 		},
 		SOMEDAY: {
-			kind: "system_filter",
+			kind: "systemFilter",
 			id: "someday",
 
 			iconName: Constants.Icons.SOMEDAY.name,
@@ -144,7 +145,7 @@ export default class Constants {
 		},
 
 		SCHEDULE: {
-			kind: "system_filter",
+			kind: "systemFilter",
 			id: "schedule",
 
 			iconName: Constants.Icons.SCHEDULED.name,
@@ -155,7 +156,7 @@ export default class Constants {
 		},
 
 		COMPLETED: {
-			kind: "system_filter",
+			kind: "systemFilter",
 			id: "completed",
 
 			iconName: Constants.Icons.COMPLETED.name,

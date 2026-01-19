@@ -5,16 +5,16 @@ import * as chrono from "chrono-node";
 import * as React from "react";
 import {
 	IconArchiveFilled,
-	IconCalendarWeek,
+	IconCalendarWeekFilled,
 	IconPlayerSkipForward,
 	IconTrash,
 } from "@tabler/icons-react";
 import { Calendar } from "@/components/ui/calendar";
-import { DateOrSomeday } from "@/app/util/types";
 import { useEffect, useState } from "react";
 import Constants from "@/app/util/constants";
 import RichIcon from "@/app/Components/RichIcon";
 import { today } from "@/app/util/dateUtilities";
+import { DateOrSomeday } from "@/app/util/types/baseTypes";
 
 // originally calendar-22.tsx
 export interface DropdownCalendarOptions {
@@ -233,7 +233,7 @@ export default function DateSelector({
 							}
 						}}
 					>
-						<IconCalendarWeek
+						<IconCalendarWeekFilled
 							size={16}
 							color={Constants.Colors.SCHEDULED_RED}
 						/>
