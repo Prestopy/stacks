@@ -556,7 +556,7 @@ export default function Home() {
 						selectedView={selectedView}
 						setSelectedViewId={setSelectedViewId}
 						createUniverse={createUniverse}
-						createProject={(universeId) => createProject(universeId)}
+						createProject={createProject}
 						deleteUniverse={deleteUniverse}
 						deleteProject={deleteProject}
 					/>

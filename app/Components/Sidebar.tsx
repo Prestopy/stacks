@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { IconPlus, IconTrash } from "@tabler/icons-react";
 
 interface SidebarButtonProps {
 	view: TaskView;
@@ -33,7 +34,7 @@ interface SidebarButtonProps {
 		  }
 		| {
 				disallowModifications: false;
-				createChildItem?: () => void;
+				createChildItem?: (projectTitle?: string) => void;
 				deleteThis: () => void;
 		  };
 }
@@ -44,6 +45,12 @@ function SidebarButton({
 	setSelectedViewId,
 	modificationOptions,
 }: SidebarButtonProps) {
+	const [projectTitle, setProjectTitle] = useState("");
+
+	const handleCancel = () => {
+		setProjectTitle("");
+	}
+
 	return (
 		<button
 			className={`group flex flex-row justify-between items-center px-4 py-1 w-full ${
@@ -66,35 +73,89 @@ function SidebarButton({
 				{view.title}
 			</div>
 			{!modificationOptions.disallowModifications && (
-				<div className="flex flex-row gap-1 text-slate-400 opacity-0 group-hover:opacity-100 duration-100">
-					<div
-						onClick={(e) => {
-							e.stopPropagation();
-							modificationOptions.deleteThis();
-						}}
-					>
-						<RichIcon
-							iconData={{
-								name: "IconTrash",
-							}}
-							size={16}
-						/>
-					</div>
+				<div
+					className="flex flex-row gap-1 text-slate-400 opacity-0 group-hover:opacity-100 duration-100"
+					onClick={(e) => e.stopPropagation()}
+				>
+					<Dialog>
+						<DialogTrigger asChild>
+							{/*<button>*/}
+								<IconTrash size={16} />
+							{/*</button>*/}
+						</DialogTrigger>
+						<DialogContent>
+							<DialogHeader>
+								<DialogTitle>Are you absolutely sure?</DialogTitle>
+								<DialogDescription>
+									This action cannot be undone. This will permanently delete this {view.kind === "universe" ? "universe and all its projects and tasks" : "project and all of its tasks"}.
+								</DialogDescription>
+							</DialogHeader>
+							<DialogFooter>
+								<DialogClose asChild>
+									<Button variant="outline">
+										Cancel
+									</Button>
+								</DialogClose>
+								<DialogClose asChild>
+									<Button
+										onClick={() => {
+											modificationOptions.deleteThis();
+										}}
+										variant="destructive"
+									>
+										Delete
+									</Button>
+								</DialogClose>
+							</DialogFooter>
+						</DialogContent>
+					</Dialog>
 					{modificationOptions.createChildItem && (
-						<div
-							onClick={(e) => {
-								e.stopPropagation();
-								if (modificationOptions.createChildItem)
-									modificationOptions.createChildItem();
-							}}
-						>
-							<RichIcon
-								iconData={{
-									name: "IconPlus",
-								}}
-								size={16}
-							/>
-						</div>
+						<Dialog>
+							<DialogTrigger asChild>
+								{/*<button>*/}
+									<IconPlus size={16} />
+								{/*</button>*/}
+							</DialogTrigger>
+							<DialogContent>
+								<DialogHeader>
+									<DialogTitle>Create a project</DialogTitle>
+									<DialogDescription>
+										Create a project to organize your tasks in.
+									</DialogDescription>
+								</DialogHeader>
+
+								<Label>Title</Label>
+								<Input
+									onChange={(e) => {
+										setProjectTitle(e.target.value);
+									}}
+									id="title-1"
+									name="title"
+									placeholder="Finish report, Plan trip, etc."
+								/>
+
+								<DialogFooter>
+									<DialogClose asChild>
+										<Button
+											variant="outline"
+											onClick={handleCancel}
+										>
+											Cancel
+										</Button>
+									</DialogClose>
+									<DialogClose asChild>
+										<Button onClick={() => {
+											if (modificationOptions.createChildItem)
+												modificationOptions.createChildItem(projectTitle);
+
+											console.log(projectTitle)
+										}}>
+											Create project
+										</Button>
+									</DialogClose>
+								</DialogFooter>
+							</DialogContent>
+						</Dialog>
 					)}
 				</div>
 			)}
@@ -113,7 +174,7 @@ interface BlockListProps {
 		  }
 		| {
 				disallowModifications: false;
-				createProject: (universeId: Id<"universes">) => void;
+				createProject: (universeId: Id<"universes">, projectTitle?: string) => void;
 				deleteUniverse: (universeId: Id<"universes">) => void;
 				deleteProject: (projectId: Id<"projects">) => void;
 		  };
@@ -144,13 +205,14 @@ function BlockList({
 							modificationOptions
 						:	{
 								disallowModifications: false,
-								createChildItem: () => {
+								createChildItem: (projectTitle?: string) => {
 									if (
 										universeOrFilterBlock.view.kind ===
 										"universe"
 									)
 										modificationOptions.createProject(
 											universeOrFilterBlock.view.id,
+											projectTitle,
 										);
 								},
 								deleteThis: () => {
@@ -303,12 +365,7 @@ export default function Sidebar({
 						<button
 							className="flex flex-row gap-2 items-center text-sm text-slate-400 hover:text-white duration-100 right-0"
 						>
-							<RichIcon
-								iconData={{
-									name: "IconPlus",
-								}}
-								size={18}
-							/>
+							<IconPlus size={18} />
 							<p>New universe</p>
 						</button>
 					</DialogTrigger>
