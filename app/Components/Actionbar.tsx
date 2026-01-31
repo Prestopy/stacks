@@ -3,7 +3,7 @@ import { TaskItemModifications, TaskLocation } from "@/app/util/types/types";
 import MoveInputDialog from "@/app/Components/MoveInputDialog";
 import { Doc } from "@/convex/_generated/dataModel";
 import Constants from "@/app/util/constants";
-import { ThisActions } from "@/app/util/types/typeUtilities";
+import { GlobalActions, EntityActions } from "@/app/util/types/typeUtilities";
 
 interface ActionbarProps {
 	projects: Doc<"projects">[];
@@ -13,10 +13,16 @@ interface ActionbarProps {
 	isFilterView?: boolean;
 	isTaskItemSelected?: boolean;
 
-	createTaskItem: () => Promise<void>;
-	createTaskFolder: () => Promise<void>;
+	taskItemActions: GlobalActions<
+		() => Promise<void>,
+		null
+	>;
+	taskFolderActions: GlobalActions<
+		() => Promise<void>,
+		null
+	>;
 
-	selectedTaskItemActions: ThisActions<
+	selectedTaskItemActions: EntityActions<
 		(mods: TaskItemModifications) => Promise<void>,
 		() => Promise<void>
 	>,
@@ -29,8 +35,9 @@ export default function Actionbar({
 
 	isFilterView,
 	isTaskItemSelected,
-	createTaskItem,
-	createTaskFolder,
+
+	taskItemActions,
+	taskFolderActions,
 
 	selectedTaskItemActions,
 }: ActionbarProps) {
@@ -38,14 +45,14 @@ export default function Actionbar({
 		<div className="min-h-12 bg-slate-800 border-t border-slate-700 flex flex-row justify-center items-center gap-10">
 			<button
 				className="disabled:opacity-50"
-				onClick={createTaskItem}
+				onClick={taskItemActions.create}
 			>
 				<IconPlus size={20} />
 			</button>
 
 			<button
 				className="disabled:opacity-50"
-				onClick={createTaskFolder}
+				onClick={taskFolderActions.create}
 				disabled={isFilterView}
 			>
 				<IconFolderPlus size={20} />

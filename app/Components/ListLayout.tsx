@@ -6,7 +6,7 @@ import { useState } from "react";
 import RichIcon from "@/app/Components/RichIcon";
 import Constants from "@/app/util/constants";
 import { ViewId } from "@/app/util/types/baseTypes";
-import { GlobalActions, ThisActions } from "@/app/util/types/typeUtilities";
+import { GlobalActions, EntityActions } from "@/app/util/types/typeUtilities";
 
 interface ListLayoutProps {
 	isFilterLayout: boolean;
@@ -17,11 +17,11 @@ interface ListLayoutProps {
 	setSelectedTaskItem: (itemId: Id<"taskItems"> | null) => void;
 	setSelectedViewId: (viewId: ViewId) => void;
 
-	taskItemActions: ThisActions<
+	taskItemActions: EntityActions<
 		(taskId: Id<"taskItems">, modifications: TaskItemModifications) => void,
 		null
 	>;
-	taskFolderActions: ThisActions<
+	taskFolderActions: EntityActions<
 		(id: Id<"taskFolders">, mods: TaskFolderModifications) => void,
 		(id: Id<"taskFolders">) => void
 	>;

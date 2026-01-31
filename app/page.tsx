@@ -536,29 +536,16 @@ export default function Home() {
 							{ kind: "data", view: Constants.FilterViews.INBOX },
 							{ kind: "spacer" },
 							{ kind: "data", view: Constants.FilterViews.TODAY },
+							{ kind: "data", view: Constants.FilterViews.SCHEDULE, },
 							{ kind: "data", view: Constants.FilterViews.EVERYTHING },
-							{
-								kind: "data",
-								view: Constants.FilterViews.FLAGGED,
-							},
-							{
-								kind: "data",
-								view: Constants.FilterViews.SCHEDULE,
-							},
-							{
-								kind: "data",
-								view: Constants.FilterViews.SOMEDAY,
-							},
+							{ kind: "data", view: Constants.FilterViews.FLAGGED, },
+							{ kind: "data", view: Constants.FilterViews.SOMEDAY, },
 							{ kind: "spacer" },
-							{
-								kind: "data",
-								view: Constants.FilterViews.COMPLETED,
-							},
+							{ kind: "data", view: Constants.FilterViews.COMPLETED, },
 						]}
 						userSections={viewHierarchy}
 						selectedView={selectedView}
 						setSelectedViewId={setSelectedViewId}
-
 						universeActions={{
 							create: createUniverse,
 							delete: deleteUniverse,
@@ -623,8 +610,15 @@ export default function Home() {
 									taskFolders={taskFoldersForView}
 									isFilterView={selectedView.kind === "systemFilter"}
 									isTaskItemSelected={selectedTaskItem !== null}
-									createTaskItem={() => createTaskItem(selectedView)}
-									createTaskFolder={() => createTaskFolder(selectedView)}
+
+									taskItemActions={{
+										create: () => createTaskItem(selectedView),
+										delete: null
+									}}
+									taskFolderActions={{
+										create: () => createTaskFolder(selectedView),
+										delete: null
+									}}
 									selectedTaskItemActions={{
 										modify: (mods: TaskItemModifications) => {
 											if (selectedTaskItem !== null)

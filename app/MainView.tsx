@@ -28,7 +28,7 @@ import { useEffect, useRef, useState } from "react";
 import CalendarInputTag from "@/app/Components/CalendarInputTag";
 import { dateToPatch } from "@/app/util/utilities";
 import { ViewId } from "@/app/util/types/baseTypes";
-import { GlobalActions, ThisActions } from "@/app/util/types/typeUtilities";
+import { EntityActions } from "@/app/util/types/typeUtilities";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import ViewDeleteDialogContent from "@/app/Components/ViewDeleteDialogContent";
 
@@ -42,11 +42,11 @@ interface BaseProps {
 	setSelectedTaskItem: (itemId: Id<"taskItems"> | null) => void;
 	setSelectedViewId: (viewId: ViewId) => void;
 
-	taskItemActions: ThisActions<
+	taskItemActions: EntityActions<
 		(taskId: Id<"taskItems">, modifications: TaskItemModifications) => void,
 		null
 	>;
-	taskFolderActions: ThisActions<
+	taskFolderActions: EntityActions<
 		(id: Id<"taskFolders">, mods: TaskFolderModifications) => void,
 		(id: Id<"taskFolders">) => void
 	>;
@@ -62,7 +62,7 @@ interface UniverseProps {
 	view: UniverseView;
 	kind: UniverseView["kind"];
 
-	thisActions: ThisActions<
+	thisActions: EntityActions<
 		(mods: UniverseModifications) => void,
 		() => void
 	>;
@@ -71,7 +71,7 @@ interface ProjectProps {
 	view: ProjectView;
 	kind: ProjectView["kind"];
 
-	thisActions: ThisActions<
+	thisActions: EntityActions<
 		(mods: ProjectModifications) => void,
 		() => void
 	>;

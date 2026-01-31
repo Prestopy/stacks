@@ -2,31 +2,24 @@ export type OptionalWithNull<T> = {
 	[K in keyof T]: undefined extends T[K] ? Exclude<T[K], undefined> | null | undefined : T[K];
 };
 
-/**
- * A utility type to group action functions for creating, modifying, and deleting entities.
- * @param CreateFn - The type of the create function. Defaults to null.
- * @param ModifyFn - The type of the modify function. Defaults to null.
- * @param DeleteFn - The type of the delete function. Defaults to null.
- */
-export type GlobalActions<
-	CreateFn = null,
-	// ModifyFn = null,
-	DeleteFn = null
-> = {
-	create: CreateFn;
-	// modify: ModifyFn;
-	delete: DeleteFn;
+type CreateAction<Fn> = {
+	create: Fn;
 };
 
-/**
- * A utility type to group action functions for modifying and deleting the current entity.
- * @param ModifyFn - The type of the modify function. Defaults to null.
- * @param DeleteFn - The type of the delete function. Defaults to null.
- */
-export type ThisActions<
-	ModifyFn = null,
-	DeleteFn = null
-> = {
-	modify: ModifyFn;
-	delete: DeleteFn;
-}
+type ModifyAction<Fn> = {
+	modify: Fn;
+};
+
+type DeleteAction<Fn> = {
+	delete: Fn;
+};
+
+// Global scope: acts on collections
+export type GlobalActions<CreateFn, DeleteFn> =
+	CreateAction<CreateFn> &
+	DeleteAction<DeleteFn>;
+
+// Entity scope: acts on a single instance
+export type EntityActions<ModifyFn, DeleteFn> =
+	ModifyAction<ModifyFn> &
+	DeleteAction<DeleteFn>;

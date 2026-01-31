@@ -23,13 +23,13 @@ import {
 import LabelWithIcon from "@/app/Components/LabelWithIcon";
 import RichIcon from "@/app/Components/RichIcon";
 import { DateOrSomeday } from "@/app/util/types/baseTypes";
-import { ThisActions } from "@/app/util/types/typeUtilities";
+import { EntityActions } from "@/app/util/types/typeUtilities";
 
 interface TaskItemLayoutProps {
 	taskItem: Doc<"taskItems">;
 	isSelected: boolean;
 
-	thisActions: ThisActions<
+	thisActions: EntityActions<
 		(mods: TaskItemModifications) => void,
 		null
 	>
