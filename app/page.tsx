@@ -561,12 +561,10 @@ export default function Home() {
 
 						universeActions={{
 							create: createUniverse,
-							modify: null,
 							delete: deleteUniverse,
 						}}
 						projectActions={{
 							create: createProject,
-							modify: null,
 							delete: deleteProject,
 						}}
 					/>
@@ -585,9 +583,10 @@ export default function Home() {
 											{
 												kind: "universe",
 												view: selectedView,
-												modifyThis: (mods: UniverseModifications) =>
-													modifyUniverse(selectedView.id, mods),
-												deleteThis: () => deleteUniverse(selectedView.id),
+												thisActions: {
+													modify: (mods: UniverseModifications) => modifyUniverse(selectedView.id, mods),
+													delete: () => deleteUniverse(selectedView.id)
+												},
 											}
 										:	{
 												kind: "project",
@@ -595,9 +594,10 @@ export default function Home() {
 												deadline: toDateOrUndefined(
 													withProject(selectedView.id)?.deadline,
 												),
-												modifyThis: (mods: ProjectModifications) =>
-													modifyProject(selectedView.id, mods),
-												deleteThis: () => deleteProject(selectedView.id),
+												thisActions: {
+													modify: (mods: ProjectModifications) => modifyProject(selectedView.id, mods),
+													delete: () => deleteProject(selectedView.id),
+												}
 											}
 
 									}
@@ -607,12 +607,10 @@ export default function Home() {
 									setSelectedViewId={setSelectedViewId}
 
 									taskItemActions={{
-										create: null,
 										modify: modifyTaskItem,
 										delete: null,
 									}}
 									taskFolderActions={{
-										create: null,
 										modify: modifyTaskFolder,
 										delete: deleteTaskFolder,
 									}}
@@ -627,17 +625,19 @@ export default function Home() {
 									isTaskItemSelected={selectedTaskItem !== null}
 									createTaskItem={() => createTaskItem(selectedView)}
 									createTaskFolder={() => createTaskFolder(selectedView)}
-									modifySelectedTaskItem={(mods: TaskItemModifications) => {
-										if (selectedTaskItem !== null)
-											return modifyTaskItem(selectedTaskItem, mods);
-										return Promise.reject();
-									}}
-									deleteSelectedTaskItem={() => {
-										if (selectedTaskItem !== null) {
-											setSelectedTaskItem(null);
-											return deleteTaskItem(selectedTaskItem);
+									selectedTaskItemActions={{
+										modify: (mods: TaskItemModifications) => {
+											if (selectedTaskItem !== null)
+												return modifyTaskItem(selectedTaskItem, mods);
+											return Promise.reject();
+										},
+										delete: () => {
+											if (selectedTaskItem !== null) {
+												setSelectedTaskItem(null);
+												return deleteTaskItem(selectedTaskItem);
+											}
+											return Promise.reject();
 										}
-										return Promise.reject();
 									}}
 								/>
 							</div>

@@ -28,7 +28,9 @@ import { useEffect, useRef, useState } from "react";
 import CalendarInputTag from "@/app/Components/CalendarInputTag";
 import { dateToPatch } from "@/app/util/utilities";
 import { ViewId } from "@/app/util/types/baseTypes";
-import { Actions } from "@/app/util/types/typeUtilities";
+import { GlobalActions, ThisActions } from "@/app/util/types/typeUtilities";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import ViewDeleteDialogContent from "@/app/Components/ViewDeleteDialogContent";
 
 
 interface BaseProps {
@@ -40,13 +42,11 @@ interface BaseProps {
 	setSelectedTaskItem: (itemId: Id<"taskItems"> | null) => void;
 	setSelectedViewId: (viewId: ViewId) => void;
 
-	taskItemActions: Actions<
-		null,
+	taskItemActions: ThisActions<
 		(taskId: Id<"taskItems">, modifications: TaskItemModifications) => void,
 		null
 	>;
-	taskFolderActions: Actions<
-		null,
+	taskFolderActions: ThisActions<
 		(id: Id<"taskFolders">, mods: TaskFolderModifications) => void,
 		(id: Id<"taskFolders">) => void
 	>;
@@ -55,20 +55,26 @@ interface BaseProps {
 interface SystemFilterProps {
 	view: FilterView;
 	kind: FilterView["kind"];
-	modifyThis?: undefined;
-	deleteThis?: undefined;
+
+	thisActions?: undefined;
 }
 interface UniverseProps {
 	view: UniverseView;
 	kind: UniverseView["kind"];
-	modifyThis: (mods: UniverseModifications) => void;
-	deleteThis: () => void;
+
+	thisActions: ThisActions<
+		(mods: UniverseModifications) => void,
+		() => void
+	>;
 }
 interface ProjectProps {
 	view: ProjectView;
 	kind: ProjectView["kind"];
-	modifyThis: (mods: ProjectModifications) => void;
-	deleteThis: () => void;
+
+	thisActions: ThisActions<
+		(mods: ProjectModifications) => void,
+		() => void
+	>;
 
 	deadline: Date | undefined;
 }
@@ -115,7 +121,7 @@ export default function MainView({
 										const { value } = dateToPatch(newDate, {
 											allowSomeday: false,
 										});
-										options.modifyThis({
+										options.thisActions?.modify({
 											deadline: value,
 										});
 									}}
@@ -183,7 +189,7 @@ function TitleBar({ options }: TitleBarProps) {
 
 	const saveTextFields = () => {
 		if (options.kind === "systemFilter") return;
-		options.modifyThis({
+		options.thisActions.modify({
 			title: tempTextFieldsRef.current.title,
 			description: tempTextFieldsRef.current.description,
 		});
@@ -255,7 +261,7 @@ function TitleBar({ options }: TitleBarProps) {
 					</h1>
 				}
 
-				{options.view.kind !== "systemFilter" ?
+				{options.kind !== "systemFilter" ?
 					<DropdownMenu>
 						<DropdownMenuTrigger className="text-slate-400 hover:text-white duration-100">
 							<IconDots size={24} />
@@ -288,9 +294,27 @@ function TitleBar({ options }: TitleBarProps) {
 									</>
 								}
 							</DropdownMenuItem>
-							<DropdownMenuItem onClick={options.deleteThis}>
-								<IconTrash />
-								Delete
+							<DropdownMenuItem>
+								<Dialog>
+									<DialogTrigger asChild onClick={(e) => {
+										e.stopPropagation();
+									}}>
+										<span className="flex flex-row items-center gap-2">
+											<IconTrash />
+											Delete
+										</span>
+									</DialogTrigger>
+									<DialogContent onClick={(e) => {
+										e.stopPropagation();
+									}}>
+										<ViewDeleteDialogContent
+											kind={options.view.kind}
+											deleteThis={
+												options.thisActions.delete
+											}
+										/>
+									</DialogContent>
+								</Dialog>
 							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>

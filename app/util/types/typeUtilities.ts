@@ -8,12 +8,25 @@ export type OptionalWithNull<T> = {
  * @param ModifyFn - The type of the modify function. Defaults to null.
  * @param DeleteFn - The type of the delete function. Defaults to null.
  */
-export type Actions<
+export type GlobalActions<
 	CreateFn = null,
-	ModifyFn = null,
+	// ModifyFn = null,
 	DeleteFn = null
 > = {
 	create: CreateFn;
-	modify: ModifyFn;
+	// modify: ModifyFn;
 	delete: DeleteFn;
 };
+
+/**
+ * A utility type to group action functions for modifying and deleting the current entity.
+ * @param ModifyFn - The type of the modify function. Defaults to null.
+ * @param DeleteFn - The type of the delete function. Defaults to null.
+ */
+export type ThisActions<
+	ModifyFn = null,
+	DeleteFn = null
+> = {
+	modify: ModifyFn;
+	delete: DeleteFn;
+}

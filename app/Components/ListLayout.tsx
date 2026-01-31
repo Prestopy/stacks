@@ -6,7 +6,7 @@ import { useState } from "react";
 import RichIcon from "@/app/Components/RichIcon";
 import Constants from "@/app/util/constants";
 import { ViewId } from "@/app/util/types/baseTypes";
-import { Actions } from "@/app/util/types/typeUtilities";
+import { GlobalActions, ThisActions } from "@/app/util/types/typeUtilities";
 
 interface ListLayoutProps {
 	isFilterLayout: boolean;
@@ -17,13 +17,11 @@ interface ListLayoutProps {
 	setSelectedTaskItem: (itemId: Id<"taskItems"> | null) => void;
 	setSelectedViewId: (viewId: ViewId) => void;
 
-	taskItemActions: Actions<
-		null,
+	taskItemActions: ThisActions<
 		(taskId: Id<"taskItems">, modifications: TaskItemModifications) => void,
 		null
 	>;
-	taskFolderActions: Actions<
-		null,
+	taskFolderActions: ThisActions<
 		(id: Id<"taskFolders">, mods: TaskFolderModifications) => void,
 		(id: Id<"taskFolders">) => void
 	>;
@@ -163,7 +161,10 @@ function BlockRenderer({
 			<TaskItemLayout
 				taskItem={item}
 				isSelected={selectedTaskItem === item._id}
-				modifyThis={(mods) => taskItemActions.modify(item._id, mods)}
+				thisActions={{
+					modify: taskItemActions.modify.bind(null, item._id),
+					delete: null,
+				}}
 				selectThis={() => setSelectedTaskItem(item._id)}
 			/>
 		);

@@ -17,7 +17,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { TaskView, ViewId } from "@/app/util/types/baseTypes";
-import { Actions } from "@/app/util/types/typeUtilities";
+import { GlobalActions } from "@/app/util/types/typeUtilities";
+import ViewDeleteDialogContent from "@/app/Components/ViewDeleteDialogContent";
 
 type Section = Divider | Spacer | Data;
 
@@ -55,14 +56,12 @@ interface SidebarProps {
 	selectedView: TaskView | null;
 	setSelectedViewId: (view: ViewId) => void;
 
-	universeActions: Actions<
+	universeActions: GlobalActions<
 		(title?: string, desc?: string) => void,
-		null,
 		(universeId: Id<"universes">) => void
 	>;
-	projectActions: Actions<
+	projectActions: GlobalActions<
 		(universeId: Id<"universes">, title?: string, desc?: string) => void,
-		null,
 		(projectId: Id<"projects">) => void
 	>;
 }
@@ -111,10 +110,8 @@ export default function Sidebar({
 					sections={userSectionsWithSpacing}
 					selectedView={selectedView}
 					setSelectedViewId={setSelectedViewId}
-
 					universeActions={{
 						create: null,
-						modify: null,
 						delete: universeActions.delete,
 					}}
 					projectActions={projectActions}
@@ -213,99 +210,70 @@ function SidebarButton({
 				{view.title}
 			</div>
 
-			{
-				(deleteThis || createChildItem) && (
-					<div
-						className="flex flex-row gap-1 opacity-0 group-hover:opacity-100 duration-100"
-						onClick={(e) => e.stopPropagation()}
-					>
-						{deleteThis && (
-							<Dialog>
-								<DialogTrigger asChild>
-						<span className="text-slate-400 hover:text-red-500 duration-100">
-							<IconTrash size={16} />
-						</span>
-								</DialogTrigger>
-								<DialogContent>
-									<DialogHeader>
-										<DialogTitle>Are you absolutely sure?</DialogTitle>
-										<DialogDescription>
-											This action cannot be undone. This will permanently delete this{" "}
-											{view.kind === "universe" ?
-												"universe and all its projects and tasks"
-												:	"project and all of its tasks"}
-											.
-										</DialogDescription>
-									</DialogHeader>
-									<DialogFooter>
-										<DialogClose asChild>
-											<Button variant="outline">Cancel</Button>
-										</DialogClose>
-										<DialogClose asChild>
-											<Button
-												onClick={() => {
-													deleteThis();
-												}}
-												variant="destructive"
-											>
-												Delete
-											</Button>
-										</DialogClose>
-									</DialogFooter>
-								</DialogContent>
-							</Dialog>
-						)}
+			{(deleteThis || createChildItem) && view.kind !== "systemFilter" && (
+				<div
+					className="flex flex-row gap-1 opacity-0 group-hover:opacity-100 duration-100"
+					onClick={(e) => e.stopPropagation()}
+				>
+					{deleteThis && (
+						<Dialog>
+							<DialogTrigger asChild>
+								<span className="text-slate-400 hover:text-red-500 duration-100">
+									<IconTrash size={16} />
+								</span>
+							</DialogTrigger>
+							<DialogContent>
+								<ViewDeleteDialogContent kind={view.kind} deleteThis={deleteThis} />
+							</DialogContent>
+						</Dialog>
+					)}
 
-						{createChildItem && (
-							<Dialog>
-								<DialogTrigger asChild>
-							<span className="text-slate-400 hover:text-white duration-100">
-								<IconPlus size={16} />
-							</span>
-								</DialogTrigger>
-								<DialogContent>
-									<DialogHeader>
-										<DialogTitle>Create a project</DialogTitle>
-										<DialogDescription>
-											Create a project to organize your tasks in.
-										</DialogDescription>
-									</DialogHeader>
+					{createChildItem && (
+						<Dialog>
+							<DialogTrigger asChild>
+								<span className="text-slate-400 hover:text-white duration-100">
+									<IconPlus size={16} />
+								</span>
+							</DialogTrigger>
+							<DialogContent>
+								<DialogHeader>
+									<DialogTitle>Create a project</DialogTitle>
+									<DialogDescription>
+										Create a project to organize your tasks in.
+									</DialogDescription>
+								</DialogHeader>
 
-									<Label>Title</Label>
-									<Input
-										onChange={(e) => {
-											setProjectTitle(e.target.value);
-										}}
-										id="title-1"
-										name="title"
-										placeholder="Finish report, Plan trip, etc."
-									/>
+								<Label>Title</Label>
+								<Input
+									onChange={(e) => {
+										setProjectTitle(e.target.value);
+									}}
+									id="title-1"
+									name="title"
+									placeholder="Finish report, Plan trip, etc."
+								/>
 
-									<DialogFooter>
-										<DialogClose asChild>
-											<Button variant="outline" onClick={handleCancel}>
-												Cancel
-											</Button>
-										</DialogClose>
-										<DialogClose asChild>
-											<Button
-												onClick={() => {
-													if (createChildItem)
-														createChildItem(
-															projectTitle,
-														);
-												}}
-											>
-												Create project
-											</Button>
-										</DialogClose>
-									</DialogFooter>
-								</DialogContent>
-							</Dialog>
-						)}
-					</div>
-				)
-			}
+								<DialogFooter>
+									<DialogClose asChild>
+										<Button variant="outline" onClick={handleCancel}>
+											Cancel
+										</Button>
+									</DialogClose>
+									<DialogClose asChild>
+										<Button
+											onClick={() => {
+												if (createChildItem) createChildItem(projectTitle);
+											}}
+										>
+											Create project
+										</Button>
+									</DialogClose>
+								</DialogFooter>
+							</DialogContent>
+						</Dialog>
+					)}
+				</div>
+			)}
 		</button>
 	);
 }
@@ -315,12 +283,11 @@ interface BlockListProps {
 	selectedView: TaskView | null;
 	setSelectedViewId: (view: ViewId) => void;
 
-	projectActions?: Actions<
+	projectActions?: GlobalActions<
 		(universeId: Id<"universes">, title?: string, desc?: string) => void,
-		null,
 		(projectId: Id<"projects">) => void
 	>;
-	universeActions?: Actions<null, null, (universeId: Id<"universes">) => void>;
+	universeActions?: GlobalActions<null, (universeId: Id<"universes">) => void>;
 }
 
 function SectionList({
@@ -344,7 +311,7 @@ function SectionList({
 					isSelected={selectedView?.id === universeOrFilterBlock.view.id}
 					setSelectedViewId={setSelectedViewId}
 					createChildItem={
-						projectActions ? (
+						projectActions ?
 							(projectTitle?: string) => {
 								if (universeOrFilterBlock.view.kind === "universe")
 									projectActions.create(
@@ -352,17 +319,15 @@ function SectionList({
 										projectTitle,
 									);
 							}
-						) : undefined
+						:	undefined
 					}
 					deleteThis={
 						universeActions ?
 							() => {
 								if (universeOrFilterBlock.view.kind === "universe")
-									universeActions.delete(
-										universeOrFilterBlock.view.id,
-									);
+									universeActions.delete(universeOrFilterBlock.view.id);
 							}
-						: undefined
+						:	undefined
 					}
 				/>
 				{universeOrFilterBlock.childData && (
@@ -374,15 +339,12 @@ function SectionList({
 								view={projectBlock.view}
 								isSelected={selectedView?.id === projectBlock.view.id}
 								setSelectedViewId={setSelectedViewId}
-
 								deleteThis={
 									projectActions ?
 										() => {
-											projectActions.delete(
-												projectBlock.view.id,
-											);
+											projectActions.delete(projectBlock.view.id);
 										}
-									: undefined
+									:	undefined
 								}
 							/>
 						))}

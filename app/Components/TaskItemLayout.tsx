@@ -23,18 +23,22 @@ import {
 import LabelWithIcon from "@/app/Components/LabelWithIcon";
 import RichIcon from "@/app/Components/RichIcon";
 import { DateOrSomeday } from "@/app/util/types/baseTypes";
+import { ThisActions } from "@/app/util/types/typeUtilities";
 
 interface TaskItemLayoutProps {
 	taskItem: Doc<"taskItems">;
 	isSelected: boolean;
 
-	modifyThis: (modifications: TaskItemModifications) => void;
+	thisActions: ThisActions<
+		(mods: TaskItemModifications) => void,
+		null
+	>
 	selectThis: () => void;
 }
 
 export default function TaskItemLayout({
 	taskItem,
-	modifyThis,
+	thisActions,
 	isSelected,
 	selectThis,
 }: TaskItemLayoutProps) {
@@ -57,7 +61,7 @@ export default function TaskItemLayout({
 
 	const debouncedTextSave = useRef(
 		debounce(() => {
-			modifyThis({
+			thisActions.modify({
 				title: tempTextFieldsRef.current.title,
 				note: tempTextFieldsRef.current.note,
 			});
@@ -95,12 +99,12 @@ export default function TaskItemLayout({
 						if (!isCompleted) {
 							// going to become true
 							debounceTimer.current = setTimeout(() => {
-								modifyThis({ isCompleted: true });
+								thisActions.modify({ isCompleted: true });
 								setOptimisticCompleted(null);
 								debounceTimer.current = null;
 							}, 1000);
 						} else {
-							modifyThis({ isCompleted: false });
+							thisActions.modify({ isCompleted: false });
 							setOptimisticCompleted(null);
 						}
 					}}
@@ -229,7 +233,7 @@ export default function TaskItemLayout({
 									// }
 									console.log(newDate);
 
-									modifyThis({
+									thisActions.modify({
 										startDate: value,
 										isSomeday: isSomeday ?? false,
 									});
@@ -261,7 +265,7 @@ export default function TaskItemLayout({
 										if (newDate.value < d) return;
 									}
 
-									modifyThis({
+									thisActions.modify({
 										deadline: value,
 									});
 								}}
@@ -273,7 +277,7 @@ export default function TaskItemLayout({
 							<FlaggedInputTag
 								isFlagged={taskItem.isFlagged}
 								updateIsFlagged={(newIsFlagged) => {
-									modifyThis({
+									thisActions.modify({
 										isFlagged: newIsFlagged,
 									});
 								}}

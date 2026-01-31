@@ -3,6 +3,7 @@ import { TaskItemModifications, TaskLocation } from "@/app/util/types/types";
 import MoveInputDialog from "@/app/Components/MoveInputDialog";
 import { Doc } from "@/convex/_generated/dataModel";
 import Constants from "@/app/util/constants";
+import { ThisActions } from "@/app/util/types/typeUtilities";
 
 interface ActionbarProps {
 	projects: Doc<"projects">[];
@@ -15,8 +16,10 @@ interface ActionbarProps {
 	createTaskItem: () => Promise<void>;
 	createTaskFolder: () => Promise<void>;
 
-	modifySelectedTaskItem: (mods: TaskItemModifications) => Promise<void>,
-	deleteSelectedTaskItem: () => Promise<void>;
+	selectedTaskItemActions: ThisActions<
+		(mods: TaskItemModifications) => Promise<void>,
+		() => Promise<void>
+	>,
 }
 
 export default function Actionbar({
@@ -29,8 +32,7 @@ export default function Actionbar({
 	createTaskItem,
 	createTaskFolder,
 
-	modifySelectedTaskItem,
-	deleteSelectedTaskItem,
+	selectedTaskItemActions,
 }: ActionbarProps) {
 	return (
 		<div className="min-h-12 bg-slate-800 border-t border-slate-700 flex flex-row justify-center items-center gap-10">
@@ -80,24 +82,24 @@ export default function Actionbar({
 				]}
 				move={(loc: TaskLocation | null) => {
 					if (loc === null) {
-						modifySelectedTaskItem({
+						selectedTaskItemActions.modify({
 							parentTaskFolder: null,
 						});
 						return;
 					}
 					switch (loc.kind) {
 						case "taskFolder":
-							modifySelectedTaskItem({
+							selectedTaskItemActions.modify({
 								parentTaskFolder: loc.id,
 							});
 							break;
 						case "project":
-							modifySelectedTaskItem({
+							selectedTaskItemActions.modify({
 								parentProject: loc.id,
 							});
 							break;
 						case "universe":
-							modifySelectedTaskItem({
+							selectedTaskItemActions.modify({
 								parentUniverse: loc.id,
 							});
 							break;
@@ -115,7 +117,7 @@ export default function Actionbar({
 			{/*FIXME: Able to perform actions on selected task even if it isn't in the current view*/}
 			<button
 				className="disabled:opacity-50"
-				onClick={deleteSelectedTaskItem}
+				onClick={selectedTaskItemActions.delete}
 				disabled={!isTaskItemSelected}
 			>
 				<IconTrash size={20} />
