@@ -29,6 +29,8 @@ interface TaskItemLayoutProps {
 	taskItem: Doc<"taskItems">;
 	isSelected: boolean;
 
+	showTodayIcon: boolean;
+
 	thisActions: EntityActions<
 		(mods: TaskItemModifications) => void,
 		null
@@ -37,6 +39,7 @@ interface TaskItemLayoutProps {
 }
 
 export default function TaskItemLayout({
+	showTodayIcon,
 	taskItem,
 	thisActions,
 	isSelected,
@@ -131,7 +134,7 @@ export default function TaskItemLayout({
 										)}
 									</p>
 								</span>
-							: taskItem.startDate && isToday(taskItem.startDate) ?
+							: taskItem.startDate && isToday(taskItem.startDate) && showTodayIcon ?
 								<span className="inline-flex align-middle mr-2 leading-[1em] h-[1em]">
 									<RichIcon iconData={Constants.Icons.TODAY} size={16} />
 								</span>

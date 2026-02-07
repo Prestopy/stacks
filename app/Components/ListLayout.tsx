@@ -1,6 +1,12 @@
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import TaskItemLayout from "@/app/Components/TaskItemLayout";
-import { Block, TaskFolderModifications, TaskItemModifications } from "@/app/util/types/types";
+import {
+	Block, FilterView,
+	ProjectView,
+	TaskFolderModifications,
+	TaskItemModifications,
+	UniverseView,
+} from "@/app/util/types/types";
 import { IconChevronRight, IconPencil, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import RichIcon from "@/app/Components/RichIcon";
@@ -12,6 +18,8 @@ interface ListLayoutProps {
 	isFilterLayout: boolean;
 
 	blocks: Block[];
+
+	view: UniverseView | ProjectView | FilterView;
 
 	selectedTaskItem: Id<"taskItems"> | null;
 	setSelectedTaskItem: (itemId: Id<"taskItems"> | null) => void;
@@ -39,6 +47,7 @@ export default function ListLayout(props: ListLayoutProps) {
 
 function BlockRenderer({
 	block,
+	view,
 	selectedTaskItem,
 	setSelectedTaskItem,
 	setSelectedViewId,
@@ -76,6 +85,8 @@ function BlockRenderer({
 					<BlockRenderer
 						key={child.value._id}
 						block={child}
+						view={view}
+
 						selectedTaskItem={selectedTaskItem}
 						setSelectedTaskItem={setSelectedTaskItem}
 						setSelectedViewId={setSelectedViewId}
@@ -142,6 +153,8 @@ function BlockRenderer({
 					<BlockRenderer
 						key={child.value._id}
 						block={child}
+						view={view}
+
 						selectedTaskItem={selectedTaskItem}
 						setSelectedTaskItem={setSelectedTaskItem}
 						setSelectedViewId={setSelectedViewId}
@@ -161,6 +174,7 @@ function BlockRenderer({
 			<TaskItemLayout
 				taskItem={item}
 				isSelected={selectedTaskItem === item._id}
+				showTodayIcon={view.kind !== "systemFilter" || view.id !== "today"}
 				thisActions={{
 					modify: taskItemActions.modify.bind(null, item._id),
 					delete: null,

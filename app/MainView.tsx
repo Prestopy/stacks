@@ -140,6 +140,8 @@ export default function MainView({
 
 							blocks={blocks}
 
+							view={options.view}
+
 							selectedTaskItem={selectedTaskItem}
 							setSelectedTaskItem={setSelectedTaskItem}
 							setSelectedViewId={setSelectedViewId}
