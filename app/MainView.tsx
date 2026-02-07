@@ -13,6 +13,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import RichIcon from "@/app/Components/RichIcon";
 import Constants from "@/app/util/constants";
 import {
+	IconCircleCheck,
 	IconDots,
 	IconPencil,
 	IconPlus,
@@ -208,18 +209,32 @@ function TitleBar({ options }: TitleBarProps) {
 								:	undefined,
 						}}
 					>
-						<span className="inline-block">
-							<RichIcon
-								iconData={
-									options.view.kind === "project" ?
-										Constants.DynamicIcons.PROJECT(
-											options.view.color,
-										)
-									:	{ name: options.view.iconName }
-								}
-								size={36}
-							/>
-						</span>{" "}
+						{
+							options.kind === "project" ?
+								<button className="group inline-block" onClick={options.thisActions.delete}>
+									<div className="block group-hover:hidden">
+										<RichIcon
+											iconData={
+												Constants.DynamicIcons.PROJECT(
+													options.view.color,
+												)
+											}
+											size={36}
+										/>
+									</div>
+									<div className="hidden group-hover:block text-slate-600">
+										<IconCircleCheck size={36} />
+									</div>
+								</button>
+								:
+								<span className="inline-block">
+									<RichIcon
+										iconData={{ name: options.view.iconName }}
+										size={36}
+									/>
+								</span>
+						}
+						{" "}
 						{options.view.title}
 					</h1>
 				:	<h1 className="flex flex-row gap-2 items-center">
