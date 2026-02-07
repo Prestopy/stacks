@@ -150,7 +150,7 @@ export default class Constants {
 
 			iconName: Constants.Icons.SCHEDULED.name,
 			color: Constants.Colors.SCHEDULED_RED,
-			title: "Schedule",
+			title: "Upcoming",
 
 			layout: "schedule",
 		},
