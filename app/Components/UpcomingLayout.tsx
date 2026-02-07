@@ -7,7 +7,7 @@ import { ViewId } from "@/app/util/types/baseTypes";
 import { Actions } from "@/app/util/types/typeUtilities";
 import TaskItemLayout from "@/app/Components/TaskItemLayout";
 import { useMemo } from "react";
-import { isSameDay, toDateOrUndefined, today } from "@/app/util/dateUtilities";
+import { isSameDay, isToday, toDateOrUndefined, today } from "@/app/util/dateUtilities";
 import { IconPlus } from "@tabler/icons-react";
 import Constants from "@/app/util/constants";
 import { format } from "date-fns";
@@ -77,21 +77,23 @@ export default function UpcomingLayout({
 		<div className="flex flex-col gap-4">
 			{blocks.map((block) => (
 				<div key={block.value.toISOString()}>
-					<div className="group flex flex-row items-center gap-4 px-3">
+					<div className="group flex flex-row items-center gap-4 px-3 select-none">
 						<div className="flex flex-row gap-3 items-end">
 							<div className="flex flex-col items-center">
-								{
-									today().getMonth() !== block.value.getMonth() ? (
-										<p className="text-sm">{format(block.value, "MMM").toLowerCase()}</p>
-									) : null
-								}
+								{today().getMonth() !== block.value.getMonth() ?
+									<p className="text-sm">
+										{format(block.value, "MMM").toLowerCase()}
+									</p>
+								:	null}
 								<h2 className="text-3xl font-bold font-mono">
 									{block.value.getDate().toString().padStart(2, "0")}
 								</h2>
 							</div>
 
-							<div className="flex flex-row gap-2 items-center text-slate-400">
-								<h2 className="text-xl">{format(block.value, "EEEE")}</h2>
+							<div className={`flex flex-row gap-2 items-center ${isToday(block.value) ? "text-white" : "text-slate-400"}`}>
+								<h2 className="text-xl">
+									{isToday(block.value) ? "Today" : format(block.value, "EEEE")}
+								</h2>
 								<button
 									className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white duration-100"
 									onClick={() => taskItemActions.create(undefined, block.value)}
