@@ -47,7 +47,7 @@ interface BaseProps {
 	setSelectedViewId: (viewId: ViewId) => void;
 
 	taskItemActions: Actions<
-		(taskFolderId?: Id<"taskFolders">) => void,
+		(taskFolderId?: Id<"taskFolders"> | undefined, startDate?: Date | undefined) => void,
 		(taskId: Id<"taskItems">, modifications: TaskItemModifications) => void,
 		null
 	>;
@@ -104,68 +104,6 @@ export default function MainView({
 	taskItemActions,
 	taskFolderActions,
 }: MainViewProps) {
-	const blocks = useMemo(() => {
-		// All item blocks
-		const itemBlocks: TaskItemBlock[] = taskItems.map((item) => ({
-			kind: "taskItem" as const,
-			value: item,
-		}));
-
-		if (options.kind === "project" || options.kind === "universe") {
-			const folderBlocks: TaskFolderBlock[] = taskFolders.map((folder) => ({
-				kind: "taskFolder" as const,
-				value: folder,
-				children: [],
-			}));
-
-			for (const folderBlock of folderBlocks) {
-				// Find items in this folder
-				folderBlock.children = itemBlocks.filter(
-					(itemBlock) =>
-						itemBlock.value.parentTaskFolder?.toString() ===
-						folderBlock.value._id.toString(),
-				);
-			}
-
-			// items not in folders
-			const ungroupedItems = itemBlocks.filter(
-				(itemBlock) => !itemBlock.value.parentTaskFolder,
-			);
-
-			return [...ungroupedItems, ...folderBlocks];
-		} else {
-			// filter (system) view
-			// Folder blocks for any folders that contain items in the current view
-			const folderBlocks: TaskFolderBlock[] = taskFolders.map((folder) => ({
-				kind: "taskFolder" as const,
-				value: folder,
-				children: itemBlocks.filter(
-					(itemBlock) =>
-						itemBlock.value.parentTaskFolder?.toString() === folder._id.toString(),
-				),
-			}));
-
-			// Project blocks only for projects that have items in the current view
-			const projectBlocks: ProjectBlock[] = (allProjects ?? [])
-				.map((project) => ({
-					kind: "project" as const,
-					value: project,
-					children: itemBlocks.filter(
-						(itemBlock) =>
-							itemBlock.value.parentProject?.toString() === project._id.toString(),
-					),
-				}))
-				.filter((pb) => pb.children.length > 0);
-
-			// items not in projects and not in folders
-			const ungroupedItems = itemBlocks.filter(
-				(itemBlock) => !itemBlock.value.parentProject && !itemBlock.value.parentTaskFolder,
-			);
-
-			return [...ungroupedItems, ...projectBlocks, ...folderBlocks];
-		}
-	}, [allProjects, options.kind, taskFolders, taskItems])
-
 	return (
 		<div
 			className="flex-1 flex flex-col items-center px-4 pt-20 overflow-auto bg-slate-900"
@@ -210,7 +148,9 @@ export default function MainView({
 				<div className="pb-20">
 					{options.view.layout === "list" ?
 						<ListLayout
-							blocks={blocks}
+							taskItems={taskItems}
+							taskFolders={taskFolders}
+							allProjects={allProjects}
 
 							view={options.view}
 
@@ -224,15 +164,12 @@ export default function MainView({
 						:
 						<UpcomingLayout
 							taskItems={taskItems}
-
-							view={options.view}
+							allProjects={allProjects}
 
 							selectedTaskItem={selectedTaskItem}
 							setSelectedTaskItem={setSelectedTaskItem}
-							setSelectedViewId={setSelectedViewId}
 
 							taskItemActions={taskItemActions}
-							taskFolderActions={taskFolderActions}
 						/>
 					}
 				</div>

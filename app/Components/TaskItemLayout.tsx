@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import { TaskItemModifications } from "@/app/util/types/types";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-	bigintToDateOrUndefined,
 	capitalize,
 	dateToPatch,
 	debounce,
@@ -19,6 +18,7 @@ import {
 	isLateOrToday,
 	isToday,
 	isLate,
+	toDateOrUndefined,
 } from "@/app/util/dateUtilities";
 import LabelWithIcon from "@/app/Components/LabelWithIcon";
 import RichIcon from "@/app/Components/RichIcon";
@@ -141,7 +141,9 @@ export default function TaskItemLayout({
 								</span>
 							:	null}
 
-							{tempTextFields.title}
+							<span className={tempTextFields.title.length <= 0 ? "text-slate-400 italic" : ""}>
+								{tempTextFields.title.length <= 0 ? "Title..." : tempTextFields.title}
+							</span>
 
 							{(taskItem.note?.length ?? 0) > 0 && (
 								<span className="inline-flex align-middle ml-2 leading-[1em] h-[1em] text-slate-400">
@@ -207,7 +209,7 @@ export default function TaskItemLayout({
 						<div className="mt-2 flex flex-col gap-1 w-fit">
 							<CalendarInputTag
 								date={toDateOrSomedayOrUndefined(
-									bigintToDateOrUndefined(taskItem.startDate),
+									toDateOrUndefined(taskItem.startDate),
 									taskItem.isSomeday,
 								)}
 								placeholder="Start date..."
@@ -245,7 +247,7 @@ export default function TaskItemLayout({
 							/>
 							<CalendarInputTag
 								date={toDateOrSomedayOrUndefined(
-									bigintToDateOrUndefined(taskItem.deadline),
+									toDateOrUndefined(taskItem.deadline),
 									false,
 								)}
 								placeholder="Deadline..."

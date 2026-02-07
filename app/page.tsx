@@ -23,7 +23,7 @@ import { IconsProvider } from "tabler-dynamic-icon";
 import * as TablerIcons from "@tabler/icons-react";
 import Constants from "@/app/util/constants";
 import { Spinner } from "@/components/ui/spinner";
-import { toDateOrUndefined } from "@/app/util/dateUtilities";
+import { toBigInt, toDateOrUndefined, today } from "@/app/util/dateUtilities";
 import { TaskView, ViewId } from "@/app/util/types/baseTypes";
 import { getViewFromId, toProjectView, toUniverseView } from "@/app/util/conversionLayers";
 
@@ -275,7 +275,7 @@ export default function Home() {
 	);
 
 	// Handlers
-	const createTaskItem = async (view: TaskView, taskFolder?: Id<"taskFolders">) => {
+	const createTaskItem = async (view: TaskView, taskFolder?: Id<"taskFolders"> | undefined, startDate?: Date | undefined) => {
 		try {
 			const taskId = await addTaskItem({
 				data: {
@@ -283,6 +283,7 @@ export default function Home() {
 					isCompleted: view.kind === "systemFilter" && view.id === "completed",
 					isFlagged: view.kind === "systemFilter" && view.id === "flagged",
 					isSomeday: view.kind === "systemFilter" && view.id === "someday",
+					startDate: startDate ? toBigInt(startDate) : view.kind === "systemFilter" && (view.id === "today" || view.id === "schedule") ? toBigInt(today()) : undefined,
 				},
 				_parentUniverseId: view.kind === "universe" ? view.id : undefined,
 				_parentProjectId: view.kind === "project" ? view.id : undefined,
@@ -542,7 +543,7 @@ export default function Home() {
 									setSelectedViewId={setSelectedViewId}
 
 									taskItemActions={{
-										create: (taskFolderId?: Id<"taskFolders">) => createTaskItem(selectedView, taskFolderId),
+										create: (taskFolderId?: Id<"taskFolders"> | undefined, startDate?: Date | undefined) => createTaskItem(selectedView, taskFolderId, startDate),
 										modify: modifyTaskItem,
 										delete: null,
 									}}

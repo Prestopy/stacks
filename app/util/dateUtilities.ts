@@ -8,6 +8,11 @@ export function toDate(value: DateParam): Date {
 	return value;
 }
 
+export function toBigInt(value: DateParam): bigint {
+	if (typeof value === "bigint") return value;
+	return BigInt(value.getTime());
+}
+
 export function toDateOrUndefined(value: DateParam | undefined): Date | undefined {
 	if (value === undefined) return undefined;
 	return toDate(value);
@@ -18,18 +23,27 @@ export function today() {
 }
 
 /**
+ * Checks if two dates are on the same calendar day (ignoring time).
+ * @param _date1
+ * @param _date2
+ */
+export function isSameDay(_date1: DateParam, _date2: DateParam) {
+	const date1 = toDate(_date1);
+	const date2 = toDate(_date2);
+
+	return (
+		date1.getDate() === date2.getDate() &&
+		date1.getMonth() === date2.getMonth() &&
+		date1.getFullYear() === date2.getFullYear()
+	);
+}
+
+/**
  * Checks if the given date is today (regardless of time).
  * @param _date
  */
 export function isToday(_date: DateParam) {
-	const date = toDate(_date);
-	const ref = today();
-
-	return (
-		date.getDate() === ref.getDate() &&
-		date.getMonth() === ref.getMonth() &&
-		date.getFullYear() === ref.getFullYear()
-	);
+	return isSameDay(_date, today());
 }
 
 /**

@@ -1,21 +1,23 @@
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import TaskItemLayout from "@/app/Components/TaskItemLayout";
 import {
-	Block, FilterView,
-	ProjectView,
-	TaskFolderModifications,
+	Block, FilterView, ProjectBlock,
+	ProjectView, TaskFolderBlock,
+	TaskFolderModifications, TaskItemBlock,
 	TaskItemModifications,
 	UniverseView,
 } from "@/app/util/types/types";
 import { IconChevronRight, IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import RichIcon from "@/app/Components/RichIcon";
 import Constants from "@/app/util/constants";
 import { ViewId } from "@/app/util/types/baseTypes";
 import { Actions } from "@/app/util/types/typeUtilities";
 
 interface ListLayoutProps {
-	blocks: Block[];
+	taskItems: Doc<"taskItems">[];
+	taskFolders: Doc<"taskFolders">[];
+	allProjects: Doc<"projects">[] | null;
 
 	view: UniverseView | ProjectView | FilterView;
 
@@ -36,9 +38,72 @@ interface ListLayoutProps {
 }
 
 export default function ListLayout(props: ListLayoutProps) {
+	const { taskItems, taskFolders, allProjects, view } = props;
+	const blocks = useMemo(() => {
+		// All item blocks
+		const itemBlocks: TaskItemBlock[] = taskItems.map((item) => ({
+			kind: "taskItem" as const,
+			value: item,
+		}));
+
+		if (view.kind === "project" || view.kind === "universe") {
+			const folderBlocks: TaskFolderBlock[] = taskFolders.map((folder) => ({
+				kind: "taskFolder" as const,
+				value: folder,
+				children: [],
+			}));
+
+			for (const folderBlock of folderBlocks) {
+				// Find items in this folder
+				folderBlock.children = itemBlocks.filter(
+					(itemBlock) =>
+						itemBlock.value.parentTaskFolder?.toString() ===
+						folderBlock.value._id.toString(),
+				);
+			}
+
+			// items not in folders
+			const ungroupedItems = itemBlocks.filter(
+				(itemBlock) => !itemBlock.value.parentTaskFolder,
+			);
+
+			return [...ungroupedItems, ...folderBlocks];
+		} else {
+			// filter (system) view
+			// Folder blocks for any folders that contain items in the current view
+			const folderBlocks: TaskFolderBlock[] = taskFolders.map((folder) => ({
+				kind: "taskFolder" as const,
+				value: folder,
+				children: itemBlocks.filter(
+					(itemBlock) =>
+						itemBlock.value.parentTaskFolder?.toString() === folder._id.toString(),
+				),
+			}));
+
+			// Project blocks only for projects that have items in the current view
+			const projectBlocks: ProjectBlock[] = (allProjects ?? [])
+				.map((project) => ({
+					kind: "project" as const,
+					value: project,
+					children: itemBlocks.filter(
+						(itemBlock) =>
+							itemBlock.value.parentProject?.toString() === project._id.toString(),
+					),
+				}))
+				.filter((pb) => pb.children.length > 0);
+
+			// items not in projects and not in folders
+			const ungroupedItems = itemBlocks.filter(
+				(itemBlock) => !itemBlock.value.parentProject && !itemBlock.value.parentTaskFolder,
+			);
+
+			return [...ungroupedItems, ...projectBlocks, ...folderBlocks];
+		}
+	}, [allProjects, view.kind, taskFolders, taskItems])
+
 	return (
 		<div>
-			{props.blocks.map((block) => (
+			{blocks.map((block) => (
 				<BlockRenderer key={block.value._id} block={block} {...props} />
 			))}
 		</div>
@@ -56,7 +121,7 @@ function BlockRenderer({
 	taskFolderActions,
 }: {
 	block: Block;
-} & Omit<ListLayoutProps, "blocks">) {
+} & Omit<ListLayoutProps, "blocks" | "taskItems" | "allProjects" | "taskFolders">) {
 	const [editingFolderId, setEditingFolderId] = useState<Id<"taskFolders"> | null>(null);
 	const [tempFolderTitle, setTempFolderTitle] = useState("");
 

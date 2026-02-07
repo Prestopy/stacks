@@ -96,6 +96,8 @@ export function debounce(func: () => void, wait: number) {
 	};
 }
 
+// FIXME: move to date utilities
+// if only in one file, js move to that file- very specific...
 export function dateToPatch(
 	date: DateOrSomeday | undefined,
 	opts?: { allowSomeday?: boolean },
@@ -117,6 +119,7 @@ export function dateToPatch(
 	};
 }
 
+// FIXME: remove this
 export function toDateOrSomedayOrUndefined(
 	date: Date | undefined,
 	isSomeday: boolean,
@@ -126,11 +129,4 @@ export function toDateOrSomedayOrUndefined(
 		return { kind: "someday" };
 	}
 	return { kind: "date", value: date };
-}
-
-export function bigintToDateOrUndefined(
-	value: bigint | undefined,
-): Date | undefined {
-	if (value === undefined) return undefined;
-	return new Date(Number(value));
 }
