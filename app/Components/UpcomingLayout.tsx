@@ -7,7 +7,7 @@ import { ViewId } from "@/app/util/types/baseTypes";
 import { Actions } from "@/app/util/types/typeUtilities";
 import TaskItemLayout from "@/app/Components/TaskItemLayout";
 import { useMemo } from "react";
-import { isSameDay, toDateOrUndefined } from "@/app/util/dateUtilities";
+import { isSameDay, toDateOrUndefined, today } from "@/app/util/dateUtilities";
 import { IconPlus } from "@tabler/icons-react";
 import Constants from "@/app/util/constants";
 import { format } from "date-fns";
@@ -78,10 +78,17 @@ export default function UpcomingLayout({
 			{blocks.map((block) => (
 				<div key={block.value.toISOString()}>
 					<div className="group flex flex-row items-center gap-4 px-3">
-						<div className="flex flex-row gap-3 items-baseline">
-							<h2 className="text-3xl font-bold font-mono">
-								{block.value.getDate().toString().padStart(2, "0")}
-							</h2>
+						<div className="flex flex-row gap-3 items-end">
+							<div className="flex flex-col items-center">
+								{
+									today().getMonth() !== block.value.getMonth() ? (
+										<p className="text-sm">{format(block.value, "MMM").toLowerCase()}</p>
+									) : null
+								}
+								<h2 className="text-3xl font-bold font-mono">
+									{block.value.getDate().toString().padStart(2, "0")}
+								</h2>
+							</div>
 
 							<div className="flex flex-row gap-2 items-center text-slate-400">
 								<h2 className="text-xl">{format(block.value, "EEEE")}</h2>

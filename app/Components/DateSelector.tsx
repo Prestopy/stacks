@@ -182,6 +182,28 @@ export default function DateSelector({
 						<RichIcon iconData={Constants.Icons.TODAY} size={16} />
 						Today
 					</button>
+					<button
+						className="px-2 py-1 text-sm text-center w-full flex flex-row gap-2 justify-center items-center not-disabled:hover:bg-slate-800 disabled:opacity-50 duration-100 rounded-sm"
+						disabled={
+							!isValid(
+								new Date(today().setHours(24, 0, 0, 0)),
+							)
+						}
+						onClick={() => {
+							updateDate({
+								kind: "date",
+								value: new Date(
+									new Date().setHours(24, 0, 0, 0),
+								),
+							});
+						}}
+					>
+						<IconPlayerSkipForward
+							size={16}
+							color={Constants.Colors.INBOX_BLUE}
+						/>
+						Tomorrow
+					</button>
 				</div>
 			)}
 
@@ -243,28 +265,6 @@ export default function DateSelector({
 				{naturalLangInput.length === 0 &&
 					!options?.hideQuickOptions && (
 						<div className="mb-2">
-							<button
-								className="px-2 py-1 text-sm text-center w-full flex flex-row gap-2 justify-center items-center not-disabled:hover:bg-slate-800 disabled:opacity-50 duration-100 rounded-sm"
-								disabled={
-									!isValid(
-										new Date(today().setHours(24, 0, 0, 0)),
-									)
-								}
-								onClick={() => {
-									updateDate({
-										kind: "date",
-										value: new Date(
-											new Date().setHours(24, 0, 0, 0),
-										),
-									});
-								}}
-							>
-								<IconPlayerSkipForward
-									size={16}
-									color={Constants.Colors.INBOX_BLUE}
-								/>
-								Tomorrow
-							</button>
 							<button
 								className="px-2 py-1 text-sm text-center w-full flex flex-row gap-2 justify-center items-center not-disabled:hover:bg-slate-800 disabled:opacity-50 duration-100 rounded-sm"
 								onClick={() => {
