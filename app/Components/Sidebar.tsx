@@ -114,6 +114,7 @@ export default function Sidebar({
 					setSelectedViewId={setSelectedViewId}
 					universeActions={{
 						create: null,
+						modify: null,
 						delete: universeActions.delete,
 					}}
 					projectActions={projectActions}
