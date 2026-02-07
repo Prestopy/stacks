@@ -7,16 +7,14 @@ import {
 	TaskItemModifications,
 	UniverseView,
 } from "@/app/util/types/types";
-import { IconChevronRight, IconPencil, IconTrash } from "@tabler/icons-react";
+import { IconChevronRight, IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import RichIcon from "@/app/Components/RichIcon";
 import Constants from "@/app/util/constants";
 import { ViewId } from "@/app/util/types/baseTypes";
-import { GlobalActions, EntityActions } from "@/app/util/types/typeUtilities";
+import { Actions } from "@/app/util/types/typeUtilities";
 
 interface ListLayoutProps {
-	isFilterLayout: boolean;
-
 	blocks: Block[];
 
 	view: UniverseView | ProjectView | FilterView;
@@ -25,11 +23,13 @@ interface ListLayoutProps {
 	setSelectedTaskItem: (itemId: Id<"taskItems"> | null) => void;
 	setSelectedViewId: (viewId: ViewId) => void;
 
-	taskItemActions: EntityActions<
+	taskItemActions: Actions<
+		(taskFolderId?: Id<"taskFolders">) => void,
 		(taskId: Id<"taskItems">, modifications: TaskItemModifications) => void,
 		null
 	>;
-	taskFolderActions: EntityActions<
+	taskFolderActions: Actions<
+		null,
 		(id: Id<"taskFolders">, mods: TaskFolderModifications) => void,
 		(id: Id<"taskFolders">) => void
 	>;
@@ -51,11 +51,12 @@ function BlockRenderer({
 	selectedTaskItem,
 	setSelectedTaskItem,
 	setSelectedViewId,
+
 	taskItemActions,
 	taskFolderActions,
 }: {
 	block: Block;
-} & Omit<ListLayoutProps, "blocks" | "isFilterLayout">) {
+} & Omit<ListLayoutProps, "blocks">) {
 	const [editingFolderId, setEditingFolderId] = useState<Id<"taskFolders"> | null>(null);
 	const [tempFolderTitle, setTempFolderTitle] = useState("");
 
@@ -68,7 +69,7 @@ function BlockRenderer({
 						size={24}
 					/>
 
-					<div className="flex flex-row items-center">
+					<div className="flex flex-row gap-1 items-center">
 						<h2 className="text-xl font-bold">{block.value.title}</h2>
 						<button
 							className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white duration-100"
@@ -106,7 +107,15 @@ function BlockRenderer({
 			<div className="mt-8 select-none">
 				<div className="group flex justify-between px-4">
 					{editingFolderId !== folder._id ?
-						<h2 className="text-xl font-bold">{folder.title}</h2>
+						<div className="flex flex-row gap-1 items-center">
+							<h2 className="text-xl font-bold">{folder.title}</h2>
+							<button
+								className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white duration-100"
+								onClick={() => taskItemActions.create(folder._id)}
+							>
+								<IconPlus size={24} />
+							</button>
+						</div>
 					:	<div className="flex gap-2">
 							<input
 								className="text-xl font-bold bg-slate-800 text-white rounded-md px-2 py-1"
@@ -176,6 +185,7 @@ function BlockRenderer({
 				isSelected={selectedTaskItem === item._id}
 				showTodayIcon={view.kind !== "systemFilter" || view.id !== "today"}
 				thisActions={{
+					create: null,
 					modify: taskItemActions.modify.bind(null, item._id),
 					delete: null,
 				}}

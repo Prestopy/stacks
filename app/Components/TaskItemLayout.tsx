@@ -23,7 +23,7 @@ import {
 import LabelWithIcon from "@/app/Components/LabelWithIcon";
 import RichIcon from "@/app/Components/RichIcon";
 import { DateOrSomeday } from "@/app/util/types/baseTypes";
-import { EntityActions } from "@/app/util/types/typeUtilities";
+import { Actions } from "@/app/util/types/typeUtilities";
 
 interface TaskItemLayoutProps {
 	taskItem: Doc<"taskItems">;
@@ -31,7 +31,8 @@ interface TaskItemLayoutProps {
 
 	showTodayIcon: boolean;
 
-	thisActions: EntityActions<
+	thisActions: Actions<
+		null,
 		(mods: TaskItemModifications) => void,
 		null
 	>

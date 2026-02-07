@@ -151,6 +151,7 @@ export default class Constants {
 			iconName: Constants.Icons.SCHEDULED.name,
 			color: Constants.Colors.SCHEDULED_RED,
 			title: "Upcoming",
+			description: "Tasks that you have scheduled to complete.",
 
 			layout: "schedule",
 		},

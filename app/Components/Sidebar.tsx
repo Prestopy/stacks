@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { TaskView, ViewId } from "@/app/util/types/baseTypes";
-import { GlobalActions } from "@/app/util/types/typeUtilities";
+import { Actions } from "@/app/util/types/typeUtilities";
 import ViewDeleteDialogContent from "@/app/Components/ViewDeleteDialogContent";
 
 type Section = Divider | Spacer | Data;
@@ -56,12 +56,14 @@ interface SidebarProps {
 	selectedView: TaskView | null;
 	setSelectedViewId: (view: ViewId) => void;
 
-	universeActions: GlobalActions<
+	universeActions: Actions<
 		(title?: string, desc?: string) => void,
+		null,
 		(universeId: Id<"universes">) => void
 	>;
-	projectActions: GlobalActions<
+	projectActions: Actions<
 		(universeId: Id<"universes">, title?: string, desc?: string) => void,
+		null,
 		(projectId: Id<"projects">) => void
 	>;
 }
@@ -283,11 +285,12 @@ interface BlockListProps {
 	selectedView: TaskView | null;
 	setSelectedViewId: (view: ViewId) => void;
 
-	projectActions?: GlobalActions<
+	projectActions?: Actions<
 		(universeId: Id<"universes">, title?: string, desc?: string) => void,
+		null,
 		(projectId: Id<"projects">) => void
 	>;
-	universeActions?: GlobalActions<null, (universeId: Id<"universes">) => void>;
+	universeActions?: Actions<null, null, (universeId: Id<"universes">) => void>;
 }
 
 function SectionList({

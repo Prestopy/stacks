@@ -1,19 +1,18 @@
 import ListLayout from "@/app/Components/ListLayout";
 import {
-	Block,
-	FilterView,
+	FilterView, ProjectBlock,
 	ProjectModifications,
-	ProjectView,
-	TaskFolderModifications,
+	ProjectView, TaskFolderBlock,
+	TaskFolderModifications, TaskItemBlock,
 	TaskItemModifications,
 	UniverseModifications,
 	UniverseView,
 } from "@/app/util/types/types";
-import { Id } from "@/convex/_generated/dataModel";
+import {Doc, Id} from "@/convex/_generated/dataModel";
 import RichIcon from "@/app/Components/RichIcon";
 import Constants from "@/app/util/constants";
 import {
-	IconCircleCheck,
+	IconCircleCheckFilled,
 	IconDots,
 	IconPencil,
 	IconPlus,
@@ -25,34 +24,39 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useEffect, useRef, useState } from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 import CalendarInputTag from "@/app/Components/CalendarInputTag";
 import { dateToPatch } from "@/app/util/utilities";
 import { ViewId } from "@/app/util/types/baseTypes";
-import { EntityActions } from "@/app/util/types/typeUtilities";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import ViewDeleteDialogContent from "@/app/Components/ViewDeleteDialogContent";
+import UpcomingLayout from "@/app/Components/UpcomingLayout";
+import {Actions} from "@/app/util/types/typeUtilities";
 
 
 interface BaseProps {
 	// taskFolders: Doc<"taskFolders">[];
 	// taskItems: Doc<"taskItems">[];
-	blocks: Block[];
+	taskItems: Doc<"taskItems">[];
+	taskFolders: Doc<"taskFolders">[];
+	allProjects: Doc<"projects">[];
+
 	selectedTaskItem: Id<"taskItems"> | null;
 
 	setSelectedTaskItem: (itemId: Id<"taskItems"> | null) => void;
 	setSelectedViewId: (viewId: ViewId) => void;
 
-	taskItemActions: EntityActions<
+	taskItemActions: Actions<
+		(taskFolderId?: Id<"taskFolders">) => void,
 		(taskId: Id<"taskItems">, modifications: TaskItemModifications) => void,
 		null
 	>;
-	taskFolderActions: EntityActions<
+	taskFolderActions: Actions<
+		null,
 		(id: Id<"taskFolders">, mods: TaskFolderModifications) => void,
 		(id: Id<"taskFolders">) => void
 	>;
 }
-
 interface SystemFilterProps {
 	view: FilterView;
 	kind: FilterView["kind"];
@@ -63,7 +67,8 @@ interface UniverseProps {
 	view: UniverseView;
 	kind: UniverseView["kind"];
 
-	thisActions: EntityActions<
+	thisActions: Actions<
+		null,
 		(mods: UniverseModifications) => void,
 		() => void
 	>;
@@ -72,7 +77,8 @@ interface ProjectProps {
 	view: ProjectView;
 	kind: ProjectView["kind"];
 
-	thisActions: EntityActions<
+	thisActions: Actions<
+		null,
 		(mods: ProjectModifications) => void,
 		() => void
 	>;
@@ -87,7 +93,9 @@ interface MainViewProps extends BaseProps {
 export default function MainView({
 	options,
 
-	blocks,
+	taskItems,
+	taskFolders,
+	allProjects,
 
 	selectedTaskItem,
 	setSelectedTaskItem,
@@ -96,6 +104,68 @@ export default function MainView({
 	taskItemActions,
 	taskFolderActions,
 }: MainViewProps) {
+	const blocks = useMemo(() => {
+		// All item blocks
+		const itemBlocks: TaskItemBlock[] = taskItems.map((item) => ({
+			kind: "taskItem" as const,
+			value: item,
+		}));
+
+		if (options.kind === "project" || options.kind === "universe") {
+			const folderBlocks: TaskFolderBlock[] = taskFolders.map((folder) => ({
+				kind: "taskFolder" as const,
+				value: folder,
+				children: [],
+			}));
+
+			for (const folderBlock of folderBlocks) {
+				// Find items in this folder
+				folderBlock.children = itemBlocks.filter(
+					(itemBlock) =>
+						itemBlock.value.parentTaskFolder?.toString() ===
+						folderBlock.value._id.toString(),
+				);
+			}
+
+			// items not in folders
+			const ungroupedItems = itemBlocks.filter(
+				(itemBlock) => !itemBlock.value.parentTaskFolder,
+			);
+
+			return [...ungroupedItems, ...folderBlocks];
+		} else {
+			// filter (system) view
+			// Folder blocks for any folders that contain items in the current view
+			const folderBlocks: TaskFolderBlock[] = taskFolders.map((folder) => ({
+				kind: "taskFolder" as const,
+				value: folder,
+				children: itemBlocks.filter(
+					(itemBlock) =>
+						itemBlock.value.parentTaskFolder?.toString() === folder._id.toString(),
+				),
+			}));
+
+			// Project blocks only for projects that have items in the current view
+			const projectBlocks: ProjectBlock[] = (allProjects ?? [])
+				.map((project) => ({
+					kind: "project" as const,
+					value: project,
+					children: itemBlocks.filter(
+						(itemBlock) =>
+							itemBlock.value.parentProject?.toString() === project._id.toString(),
+					),
+				}))
+				.filter((pb) => pb.children.length > 0);
+
+			// items not in projects and not in folders
+			const ungroupedItems = itemBlocks.filter(
+				(itemBlock) => !itemBlock.value.parentProject && !itemBlock.value.parentTaskFolder,
+			);
+
+			return [...ungroupedItems, ...projectBlocks, ...folderBlocks];
+		}
+	}, [allProjects, options.kind, taskFolders, taskItems])
+
 	return (
 		<div
 			className="flex-1 flex flex-col items-center px-4 pt-20 overflow-auto bg-slate-900"
@@ -105,8 +175,10 @@ export default function MainView({
 			onClick={() => setSelectedTaskItem(null)}
 		>
 			<div className="w-[720] h-full">
+				{/*TITLE BAR*/}
 				<TitleBar options={options} />
 
+				{/*PROJECT BAR*/}
 				{
 					options.kind === "project" && (
 						<div className="flex flex-col mt-5">
@@ -133,11 +205,11 @@ export default function MainView({
 				}
 
 				<hr className="my-5 px-5 border-none" />
+
+				{/*TASK LIST*/}
 				<div className="pb-20">
 					{options.view.layout === "list" ?
 						<ListLayout
-							isFilterLayout={options.view.kind === "systemFilter"}
-
 							blocks={blocks}
 
 							view={options.view}
@@ -149,7 +221,20 @@ export default function MainView({
 							taskItemActions={taskItemActions}
 							taskFolderActions={taskFolderActions}
 						/>
-						:	<div>Schedule View (to be implemented)</div>}
+						:
+						<UpcomingLayout
+							taskItems={taskItems}
+
+							view={options.view}
+
+							selectedTaskItem={selectedTaskItem}
+							setSelectedTaskItem={setSelectedTaskItem}
+							setSelectedViewId={setSelectedViewId}
+
+							taskItemActions={taskItemActions}
+							taskFolderActions={taskFolderActions}
+						/>
+					}
 				</div>
 			</div>
 		</div>
@@ -224,8 +309,8 @@ function TitleBar({ options }: TitleBarProps) {
 											size={36}
 										/>
 									</div>
-									<div className="hidden group-hover:block text-slate-600">
-										<IconCircleCheck size={36} />
+									<div className="hidden group-hover:block opacity-80">
+										<IconCircleCheckFilled size={36} />
 									</div>
 								</button>
 								:

@@ -14,12 +14,17 @@ type DeleteAction<Fn> = {
 	delete: Fn;
 };
 
-// Global scope: acts on collections
-export type GlobalActions<CreateFn, DeleteFn> =
+export type Actions<CreateFn, ModifyFn, DeleteFn> =
 	CreateAction<CreateFn> &
-	DeleteAction<DeleteFn>;
-
-// Entity scope: acts on a single instance
-export type EntityActions<ModifyFn, DeleteFn> =
 	ModifyAction<ModifyFn> &
 	DeleteAction<DeleteFn>;
+
+// // Global scope: acts on collections
+// export type GlobalActions<CreateFn, DeleteFn> =
+// 	CreateAction<CreateFn> &
+// 	DeleteAction<DeleteFn>;
+//
+// // Entity scope: acts on a single instance
+// export type EntityActions<ModifyFn, DeleteFn> =
+// 	ModifyAction<ModifyFn> &
+// 	DeleteAction<DeleteFn>;

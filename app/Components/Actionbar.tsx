@@ -3,7 +3,7 @@ import { TaskItemModifications, TaskLocation } from "@/app/util/types/types";
 import MoveInputDialog from "@/app/Components/MoveInputDialog";
 import { Doc } from "@/convex/_generated/dataModel";
 import Constants from "@/app/util/constants";
-import { GlobalActions, EntityActions } from "@/app/util/types/typeUtilities";
+import { Actions } from "@/app/util/types/typeUtilities";
 
 interface ActionbarProps {
 	projects: Doc<"projects">[];
@@ -13,16 +13,19 @@ interface ActionbarProps {
 	isFilterView?: boolean;
 	isTaskItemSelected?: boolean;
 
-	taskItemActions: GlobalActions<
+	taskItemActions: Actions<
 		() => Promise<void>,
+		null,
 		null
 	>;
-	taskFolderActions: GlobalActions<
+	taskFolderActions: Actions<
 		() => Promise<void>,
+		null,
 		null
 	>;
 
-	selectedTaskItemActions: EntityActions<
+	selectedTaskItemActions: Actions<
+		null,
 		(mods: TaskItemModifications) => Promise<void>,
 		() => Promise<void>
 	>,

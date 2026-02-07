@@ -103,67 +103,6 @@ export default function Home() {
 			return [];
 		}
 	}, [allTaskFolders, selectedView]);
-	const blocksForView = useMemo(() => {
-		// All item blocks
-		const itemBlocks: TaskItemBlock[] = taskItemsForView.map((item) => ({
-			kind: "taskItem" as const,
-			value: item,
-		}));
-
-		if (selectedView.kind === "project" || selectedView.kind === "universe") {
-			const folderBlocks: TaskFolderBlock[] = taskFoldersForView.map((folder) => ({
-				kind: "taskFolder" as const,
-				value: folder,
-				children: [],
-			}));
-
-			for (const folderBlock of folderBlocks) {
-				// Find items in this folder
-				folderBlock.children = itemBlocks.filter(
-					(itemBlock) =>
-						itemBlock.value.parentTaskFolder?.toString() ===
-						folderBlock.value._id.toString(),
-				);
-			}
-
-			// items not in folders
-			const ungroupedItems = itemBlocks.filter(
-				(itemBlock) => !itemBlock.value.parentTaskFolder,
-			);
-
-			return [...ungroupedItems, ...folderBlocks];
-		} else {
-			// filter (system) view
-			// Folder blocks for any folders that contain items in the current view
-			const folderBlocks: TaskFolderBlock[] = taskFoldersForView.map((folder) => ({
-				kind: "taskFolder" as const,
-				value: folder,
-				children: itemBlocks.filter(
-					(itemBlock) =>
-						itemBlock.value.parentTaskFolder?.toString() === folder._id.toString(),
-				),
-			}));
-
-			// Project blocks only for projects that have items in the current view
-			const projectBlocks: ProjectBlock[] = (allProjects ?? [])
-				.map((project) => ({
-					kind: "project" as const,
-					value: project,
-					children: itemBlocks.filter(
-						(itemBlock) =>
-							itemBlock.value.parentProject?.toString() === project._id.toString(),
-					),
-				}))
-				.filter((pb) => pb.children.length > 0);
-
-			// items not in projects and not in folders
-			const ungroupedItems = itemBlocks.filter(
-				(itemBlock) => !itemBlock.value.parentProject && !itemBlock.value.parentTaskFolder,
-			);
-
-			return [...ungroupedItems, ...projectBlocks, ...folderBlocks];
-		}
-	}, [taskItemsForView, taskFoldersForView, allProjects, selectedView]);
 
 	// Mutations
 	const addTaskItem = useMutation(api.taskItems.createTaskItem);
@@ -336,7 +275,7 @@ export default function Home() {
 	);
 
 	// Handlers
-	const createTaskItem = async (view: TaskView) => {
+	const createTaskItem = async (view: TaskView, taskFolder?: Id<"taskFolders">) => {
 		try {
 			const taskId = await addTaskItem({
 				data: {
@@ -347,6 +286,7 @@ export default function Home() {
 				},
 				_parentUniverseId: view.kind === "universe" ? view.id : undefined,
 				_parentProjectId: view.kind === "project" ? view.id : undefined,
+				_parentTaskFolderId: taskFolder,
 				_userId: Constants.DEBUG_USER_ID,
 			});
 			setSelectedTaskItem(taskId);
@@ -548,10 +488,12 @@ export default function Home() {
 						setSelectedViewId={setSelectedViewId}
 						universeActions={{
 							create: createUniverse,
+							modify: null,
 							delete: deleteUniverse,
 						}}
 						projectActions={{
 							create: createProject,
+							modify: null,
 							delete: deleteProject,
 						}}
 					/>
@@ -571,6 +513,7 @@ export default function Home() {
 												kind: "universe",
 												view: selectedView,
 												thisActions: {
+													create: null,
 													modify: (mods: UniverseModifications) => modifyUniverse(selectedView.id, mods),
 													delete: () => deleteUniverse(selectedView.id)
 												},
@@ -582,22 +525,29 @@ export default function Home() {
 													withProject(selectedView.id)?.deadline,
 												),
 												thisActions: {
+													create: null,
 													modify: (mods: ProjectModifications) => modifyProject(selectedView.id, mods),
 													delete: () => deleteProject(selectedView.id),
 												}
 											}
 
 									}
-									blocks={blocksForView}
+
+									taskItems={taskItemsForView}
+									taskFolders={taskFoldersForView}
+									allProjects={allProjects}
+
 									selectedTaskItem={selectedTaskItem}
 									setSelectedTaskItem={setSelectedTaskItem}
 									setSelectedViewId={setSelectedViewId}
 
 									taskItemActions={{
+										create: (taskFolderId?: Id<"taskFolders">) => createTaskItem(selectedView, taskFolderId),
 										modify: modifyTaskItem,
 										delete: null,
 									}}
 									taskFolderActions={{
+										create: null,
 										modify: modifyTaskFolder,
 										delete: deleteTaskFolder,
 									}}
@@ -613,13 +563,16 @@ export default function Home() {
 
 									taskItemActions={{
 										create: () => createTaskItem(selectedView),
+										modify: null,
 										delete: null
 									}}
 									taskFolderActions={{
 										create: () => createTaskFolder(selectedView),
+										modify: null,
 										delete: null
 									}}
 									selectedTaskItemActions={{
+										create: null,
 										modify: (mods: TaskItemModifications) => {
 											if (selectedTaskItem !== null)
 												return modifyTaskItem(selectedTaskItem, mods);

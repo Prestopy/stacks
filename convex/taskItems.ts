@@ -98,6 +98,7 @@ export const createTaskItem = mutation({
 		}),
 		_parentUniverseId: v.optional(v.id("universes")),
 		_parentProjectId: v.optional(v.id("projects")),
+		_parentTaskFolderId: v.optional(v.id("taskFolders")),
 		_userId: v.id("users"),
 	},
 	handler: async (ctx, args) => {
@@ -105,6 +106,19 @@ export const createTaskItem = mutation({
 			throw new Error(
 				"only one or none can be provided from: _parentUniverseId or _parentProjectId.",
 			);
+		}
+
+		if (args._parentTaskFolderId) {
+			const folder = await ctx.db.get("taskFolders", args._parentTaskFolderId);
+			if (!folder) throw new Error("Task Folder not found");
+
+			if (args._parentProjectId && folder.parentProject !== args._parentProjectId) {
+				throw new Error("Task Folder does not belong to the specified Project");
+			}
+
+			if (args._parentUniverseId && folder.parentUniverse !== args._parentUniverseId) {
+				throw new Error("Task Folder does not belong to the specified Universe");
+			}
 		}
 
 		if (args._parentProjectId) {
@@ -115,12 +129,14 @@ export const createTaskItem = mutation({
 				...args.data,
 				parentUniverse: project.parentUniverse,
 				parentProject: args._parentProjectId,
+				parentTaskFolder: args._parentTaskFolderId,
 				user: args._userId,
 			});
 		} else {
 			return await ctx.db.insert("taskItems", {
 				...args.data,
 				parentUniverse: args._parentUniverseId,
+				parentTaskFolder: args._parentTaskFolderId,
 				user: args._userId,
 			});
 		}
