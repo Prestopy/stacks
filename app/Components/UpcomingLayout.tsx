@@ -3,13 +3,11 @@ import {
 	TaskItemModifications,
 } from "@/app/util/types/types";
 import { Doc, Id } from "@/convex/_generated/dataModel";
-import { ViewId } from "@/app/util/types/baseTypes";
 import { Actions } from "@/app/util/types/typeUtilities";
 import TaskItemLayout from "@/app/Components/TaskItemLayout";
 import { useMemo } from "react";
 import { isSameDay, isToday, toDateOrUndefined, today } from "@/app/util/dateUtilities";
 import { IconPlus } from "@tabler/icons-react";
-import Constants from "@/app/util/constants";
 import { format } from "date-fns";
 
 interface UpcomingLayoutProps {

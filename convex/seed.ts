@@ -1,5 +1,4 @@
 import { mutation } from "./_generated/server";
-import { Id } from "./_generated/dataModel";
 
 /**
  * Run with:

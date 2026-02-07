@@ -1,9 +1,9 @@
 import ListLayout from "@/app/Components/ListLayout";
 import {
-	FilterView, ProjectBlock,
+	FilterView,
 	ProjectModifications,
-	ProjectView, TaskFolderBlock,
-	TaskFolderModifications, TaskItemBlock,
+	ProjectView,
+	TaskFolderModifications,
 	TaskItemModifications,
 	UniverseModifications,
 	UniverseView,
@@ -24,7 +24,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {useEffect, useMemo, useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import CalendarInputTag from "@/app/Components/CalendarInputTag";
 import { dateToPatch } from "@/app/util/utilities";
 import { ViewId } from "@/app/util/types/baseTypes";

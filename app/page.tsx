@@ -4,11 +4,8 @@ import Sidebar from "@/app/Components/Sidebar";
 import MainView from "@/app/MainView";
 import { useMemo, useState } from "react";
 import {
-	ProjectBlock,
 	ProjectModifications,
-	TaskFolderBlock,
 	TaskFolderModifications,
-	TaskItemBlock,
 	TaskItemModifications,
 	UniverseModifications,
 } from "@/app/util/types/types";
