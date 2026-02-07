@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
 	title: "Asdf",
-	description: "The Prestopian todo list",
+	description: "The Prestopian todo list!",
 };
 
 export default function RootLayout({
