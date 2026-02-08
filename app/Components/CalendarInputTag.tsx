@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/popover";
 import * as React from "react";
 import { DateOrSomeday, IconData } from "@/app/util/types/baseTypes";
+import { format } from "date-fns";
 
 interface CalendarInputTagProps {
 	date: DateOrSomeday | undefined;
@@ -64,7 +65,7 @@ export default function CalendarInputTag({
 							{date ?
 								date.kind === "someday" ?
 									"Someday"
-								:	isExactDate(date.value) ? date.value.toLocaleDateString() : date.value.toLocaleString()
+								:	isExactDate(date.value) ? format(date.value, "MM/dd/yyyy") : format(date.value, "MM/dd/yyyy HH:mm")
 							:	(placeholder ?? "Select date...")}
 							{date && date.kind === "date" && (
 								<span className="text-slate-400">

@@ -42,7 +42,7 @@ export function filterTaskItems(taskItems: Doc<"taskItems">[], view: TaskView) {
 				);
 			case "schedule":
 				return filteredTodos.filter(
-					(todo) => !todo.isCompleted && todo.startDate !== undefined,
+					(todo) => todo.startDate !== undefined || todo.deadline !== undefined,
 				);
 			case "completed":
 				return filteredTodos.filter((todo) => todo.isCompleted);

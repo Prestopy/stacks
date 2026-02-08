@@ -6,9 +6,11 @@ import { Doc, Id } from "@/convex/_generated/dataModel";
 import { Actions } from "@/app/util/types/typeUtilities";
 import TaskItemLayout from "@/app/Components/TaskItemLayout";
 import { useMemo } from "react";
-import { isSameDay, isToday, toDateOrUndefined, today, toExactDate } from "@/app/util/dateUtilities";
+import { isSameDay, isToday, toDate, toDateOrUndefined, today, toExactDate } from "@/app/util/dateUtilities";
 import { IconPlus } from "@tabler/icons-react";
 import { format } from "date-fns";
+import RichIcon from "@/app/Components/RichIcon";
+import Constants from "@/app/util/constants";
 
 interface UpcomingLayoutProps {
 	taskItems: Doc<"taskItems">[];
@@ -27,7 +29,16 @@ interface UpcomingLayoutProps {
 interface DateBlock {
 	kind: "date";
 	value: Date;
-	children: TaskItemBlock[];
+	children: (TaskItemBlock | DeadlineBlock)[];
+}
+interface DeadlineBlock {
+	kind: "deadline";
+	value: {
+		_id: Id<"taskItems">;
+		title: string;
+		isCompleted: boolean;
+		date: Date;
+	};
 }
 export default function UpcomingLayout({
 	taskItems,
@@ -37,19 +48,13 @@ export default function UpcomingLayout({
 	taskItemActions,
 }: UpcomingLayoutProps) {
 	const blocks = useMemo(() => {
-		// All item blocks
-		const itemBlocks: TaskItemBlock[] = taskItems.map((item) => ({
-			kind: "taskItem" as const,
-			value: item,
-		}));
-
 		const folderBlocks: DateBlock[] = [];
 
 		// The next 12 months TODO
 		// The next 14 days including today should be dates
 		// Everything else be months
 
-		for (let i = 0; i < 7; i++) {
+		for (let i = 0; i < 14; i++) {
 			const date = new Date();
 			date.setDate(date.getDate() + i);
 			folderBlocks.push({
@@ -60,12 +65,39 @@ export default function UpcomingLayout({
 		}
 
 		for (const folderBlock of folderBlocks) {
-			folderBlock.children = itemBlocks.filter(
-				(itemBlock) => {
-					const itemDate = toDateOrUndefined(itemBlock.value.startDate);
-					return itemDate !== undefined && isSameDay(itemDate, folderBlock.value);
-				},
-			);
+			folderBlock.children = taskItems
+				.filter(i => i.startDate !== undefined || i.deadline !== undefined)
+				.map(
+					(item) => {
+						const itemDate = toDateOrUndefined(item.startDate);
+						const itemDeadline = toDateOrUndefined(item.deadline);
+						if (itemDate !== undefined && !item.isCompleted) {
+							if (isSameDay(itemDate, folderBlock.value)) {
+								return {
+									kind: "taskItem",
+									value: item,
+								} as TaskItemBlock
+							}
+						}
+
+						if (itemDeadline !== undefined) {
+							if (isSameDay(itemDeadline, folderBlock.value)) {
+								return {
+									kind: "deadline",
+									value: {
+										_id: item._id,
+										title: item.title,
+										isCompleted: item.isCompleted,
+										date: toDate(itemDeadline),
+									},
+								} as DeadlineBlock
+							}
+						}
+
+						return null;
+					}
+				)
+				.filter(i => i !== null);
 		}
 
 		return [...folderBlocks];
@@ -104,20 +136,40 @@ export default function UpcomingLayout({
 
 					<hr className="mt-2 mb-4 border-slate-700" />
 
-					{block.children.map((item) => (
-						<TaskItemLayout
-							key={item.value._id}
-							taskItem={item.value}
-							isSelected={selectedTaskItem === item.value._id}
-							showTodayIcon={true}
-							thisActions={{
-								create: null,
-								modify: taskItemActions.modify.bind(null, item.value._id),
-								delete: null,
-							}}
-							selectThis={() => setSelectedTaskItem(item.value._id)}
-						/>
-					))}
+					{block.children.sort((a, b) => a.kind === "deadline" ? -1 : 1).map((item) => {
+						if (item.kind === "taskItem") {
+							return (
+								<TaskItemLayout
+									key={item.value._id}
+									taskItem={item.value}
+									isSelected={selectedTaskItem === item.value._id}
+									showTodayIcon={true}
+									thisActions={{
+										create: null,
+										modify: taskItemActions.modify.bind(null, item.value._id),
+										delete: null,
+									}}
+									selectThis={() => setSelectedTaskItem(item.value._id)}
+								/>
+							)
+						} else if (item.kind === "deadline") {
+							return (
+								<div
+									className={`group px-4 mb-2 flex flex-row items-center gap-5 ${item.value.isCompleted ? "line-through text-slate-400" : "text-white"}     rounded-lg cursor-pointer duration-200`}
+									onClick={(e) => {
+										e.stopPropagation();
+										setSelectedTaskItem(item.value._id);
+									}}
+									key={item.value._id + "-deadline"}
+								>
+									<RichIcon iconData={Constants.Icons.DEADLINE} size={16} />
+									<p className="text-sm underline-offset-2">
+										<span className="group-hover:underline">{item.value.title}</span> <span className="pl-4 text-slate-400">due at {format(item.value.date, "HH:mm")}</span>
+									</p>
+								</div>
+							)
+						}
+					})}
 				</div>
 			))}
 		</div>
