@@ -6,7 +6,7 @@ import { Doc, Id } from "@/convex/_generated/dataModel";
 import { Actions } from "@/app/util/types/typeUtilities";
 import TaskItemLayout from "@/app/Components/TaskItemLayout";
 import { useMemo } from "react";
-import { isSameDay, isToday, toDateOrUndefined, today } from "@/app/util/dateUtilities";
+import { isSameDay, isToday, toDateOrUndefined, today, toExactDate } from "@/app/util/dateUtilities";
 import { IconPlus } from "@tabler/icons-react";
 import { format } from "date-fns";
 
@@ -94,7 +94,7 @@ export default function UpcomingLayout({
 								</h2>
 								<button
 									className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white duration-100"
-									onClick={() => taskItemActions.create(undefined, block.value)}
+									onClick={() => taskItemActions.create(undefined, toExactDate(block.value))}
 								>
 									<IconPlus size={24} />
 								</button>

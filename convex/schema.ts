@@ -63,6 +63,7 @@ export default defineSchema({
 
 		user: v.id("users"),
 	}),
+
 	users: defineTable({
 		firstName: v.string(),
 		lastName: v.string(),

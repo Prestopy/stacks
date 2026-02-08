@@ -1,4 +1,4 @@
-import { formatRelative } from "date-fns";
+import { formatRelative, startOfDay } from "date-fns";
 import dayjs from "dayjs";
 
 type DateParam = Date | bigint;
@@ -58,6 +58,11 @@ export function isExactDate(_date: DateParam) {
 		date.getSeconds() === 0 &&
 		date.getMilliseconds() === 0
 	)
+}
+
+export function toExactDate(_date: DateParam) {
+	const date = toDate(_date);
+	return startOfDay(date);
 }
 
 /**
