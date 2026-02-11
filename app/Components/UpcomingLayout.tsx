@@ -32,7 +32,9 @@ interface UpcomingLayoutProps {
 
 interface DateBlock {
 	kind: "date";
-	value: Date;
+	value: {
+		date: Date;
+	};
 	children: (TaskItemBlock | DeadlineBlock)[];
 }
 
@@ -62,7 +64,7 @@ export default function UpcomingLayout({
 			date.setDate(date.getDate() + i);
 			folderBlocks.push({
 				kind: "date",
-				value: date,
+				value: { date },
 				children: [],
 			});
 		}
@@ -75,7 +77,7 @@ export default function UpcomingLayout({
 					const itemDeadline = toDateOrUndefined(item.deadline);
 					if (itemDate !== undefined && !item.isCompleted) {
 						// FIXME: If the start date == deadline, only start date will show
-						if (isSameDay(itemDate, folderBlock.value)) {
+						if (isSameDay(itemDate, folderBlock.value.date)) {
 							return {
 								kind: "taskItem",
 								value: item,
@@ -84,7 +86,7 @@ export default function UpcomingLayout({
 					}
 
 					if (itemDeadline !== undefined) {
-						if (isSameDay(itemDeadline, folderBlock.value)) {
+						if (isSameDay(itemDeadline, folderBlock.value.date)) {
 							return {
 								kind: "deadline",
 								value: {
@@ -146,7 +148,7 @@ export default function UpcomingLayout({
 
 			return {
 				kind: "date",
-				value: addDays(today(), 7), // Placeholder value, not used for display
+				value: {date: addDays(today(), 7)}, // Placeholder value, not used for display
 				children,
 			} as DateBlock;
 		}
@@ -155,32 +157,32 @@ export default function UpcomingLayout({
 	return (
 		<div className="flex flex-col gap-4">
 			{blocks.map((block) => (
-				<div key={block.value.toISOString()}>
+				<div key={block.value.date.toISOString()}>
 					<div className="group flex flex-row items-center gap-4 px-3 select-none">
 						<div className="flex flex-row gap-3 items-end">
 							{/*DAY NUMBER*/}
 							<div className="flex flex-col items-center">
-								{today().getMonth() !== block.value.getMonth() ?
+								{today().getMonth() !== block.value.date.getMonth() ?
 									<p className="text-sm">
-										{format(block.value, "MMM").toLowerCase()}
+										{format(block.value.date, "MMM").toLowerCase()}
 									</p>
 								:	null}
 								<h2 className="text-3xl font-bold font-mono">
-									{block.value.getDate().toString().padStart(2, "0")}
+									{block.value.date.getDate().toString().padStart(2, "0")}
 								</h2>
 							</div>
 
 							{/*DAY NAME*/}
 							<div
-								className={`flex flex-row gap-2 items-center ${isToday(block.value) ? "text-white" : "text-slate-400"}`}
+								className={`flex flex-row gap-2 items-center ${isToday(block.value.date) ? "text-white" : "text-slate-400"}`}
 							>
 								<h2 className="text-xl">
-									{isToday(block.value) ? "Today" : format(block.value, "EEEE")}
+									{isToday(block.value.date) ? "Today" : format(block.value.date, "EEEE")}
 								</h2>
 								<button
 									className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white duration-100"
 									onClick={() =>
-										taskItemActions.create(undefined, toExactDate(block.value))
+										taskItemActions.create(undefined, toExactDate(block.value.date))
 									}
 								>
 									<IconPlus size={24} />
@@ -235,7 +237,21 @@ export function BlockChildren({
 	return (
 		<>
 			{block.children
-				.sort((a, b) => (a.kind === "deadline" ? -1 : 1))
+				.sort((a, b) => {
+					// 1. Priority Priority: Deadlines first
+					if (a.kind === "deadline" && b.kind !== "deadline") return -1;
+					if (a.kind !== "deadline" && b.kind === "deadline") return 1;
+
+					// 2. Date Comparison (The Tie-breaker)
+					const ad = a.kind === "taskItem" ? toDateOrUndefined(a.value.startDate) : a.value.date;
+					const bd = b.kind === "taskItem" ? toDateOrUndefined(b.value.startDate) : b.value.date;
+
+					if (ad === undefined && bd === undefined) return 0;
+					if (ad === undefined) return 1;
+					if (bd === undefined) return -1;
+
+					return ad.getTime() - bd.getTime();
+				})
 				.map((item) => {
 					if (item.kind === "taskItem") {
 						return (
@@ -269,6 +285,7 @@ export function BlockChildren({
 									</span>{" "}
 									<span className="pl-4 text-slate-400">
 										{specificDeadline ? format(item.value.date, "MM/dd 'at' HH:mm") : format(item.value.date, "HH:mm")}
+										{" "}q2{item.value.date.getTime()}
 									</span>
 								</p>
 							</div>
