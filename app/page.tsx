@@ -470,15 +470,35 @@ export default function Home() {
 	return (
 		<DragDropProvider onDragEnd={(event) => {
 			if (event.canceled) return;
+
 			const {source, target} = event.operation;
-			if (target?.type === "taskFolder" && source?.type === "taskItem") {
-				modifyTaskItem(source.id as Id<"taskItems">, {
-					parentTaskFolder: target.id as Id<"taskFolders">
-				})
-			} else if (target?.type === "noTaskFolder" && source?.type === "taskItem") {
-				modifyTaskItem(source.id as Id<"taskItems">, {
-					parentTaskFolder: null
-				})
+			if (!source || !target) return;
+
+			if (source.type === "taskItem") {
+				switch(target.type ?? "") {
+					case "taskFolder":
+						modifyTaskItem(source.id as Id<"taskItems">, {
+							parentTaskFolder: target.id as Id<"taskFolders">
+						});
+						break;
+					case "noTaskFolder":
+						modifyTaskItem(source.id as Id<"taskItems">, {
+							parentTaskFolder: null
+						});
+					case "project":
+						modifyTaskItem(source.id as Id<"taskItems">, {
+							parentProject: target.id as Id<"projects">,
+							parentTaskFolder: null,
+						});
+						break;
+					case "universe":
+						modifyTaskItem(source.id as Id<"taskItems">, {
+							parentUniverse: target.id as Id<"universes">,
+							parentProject: null,
+							parentTaskFolder: null,
+						});
+						break;
+				}
 			}
 		}}>
 			<IconsProvider icons={TablerIcons}>

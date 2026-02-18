@@ -19,6 +19,7 @@ import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { TaskView, ViewId } from "@/app/util/types/baseTypes";
 import { Actions } from "@/app/util/types/typeUtilities";
 import ViewDeleteDialogContent from "@/app/Components/ViewDeleteDialogContent";
+import { useDroppable } from "@dnd-kit/react";
 
 type Section = Divider | Spacer | Data;
 
@@ -191,9 +192,16 @@ function SidebarButton({
 		setProjectTitle("");
 	};
 
+	const {isDropTarget, ref} = useDroppable({
+		type: view.kind,
+		id: view.id,
+		accept: "taskItem"
+	});
+
 	return (
 		<button
-			className={`group flex flex-row justify-between items-center px-4 py-1 w-full ${
+			ref={ref}
+			className={(isDropTarget ? "bg-green-500/20 " : "") + `group flex flex-row justify-between items-center px-4 py-1 w-full ${
 				!isChild ? "font-bold text-slate-300"
 				: !isSelected ? "text-slate-400"
 				: "text-slate-300"
