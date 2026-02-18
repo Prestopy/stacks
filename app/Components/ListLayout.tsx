@@ -8,11 +8,12 @@ import {
 	UniverseView,
 } from "@/app/util/types/types";
 import { IconChevronRight, IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import RichIcon from "@/app/Components/RichIcon";
 import Constants from "@/app/util/constants";
 import { ViewId } from "@/app/util/types/baseTypes";
 import { Actions } from "@/app/util/types/typeUtilities";
+import { useDroppable } from "@dnd-kit/react";
 
 interface ListLayoutProps {
 	taskItems: Doc<"taskItems">[];
@@ -101,8 +102,15 @@ export default function ListLayout(props: ListLayoutProps) {
 		}
 	}, [allProjects, view.kind, taskFolders, taskItems])
 
+	const {isDropTarget, ref} = useDroppable({
+		type: "noTaskFolder",
+		id: "empty",
+		accept: "taskItem",
+		collisionPriority: 1
+	});
+
 	return (
-		<div>
+		<div className={"p-px " + (isDropTarget ? "rounded-md bg-green-500/20" : "")} ref={ref}>
 			{blocks.map((block) => (
 				<BlockRenderer key={block.value._id} block={block} {...props} />
 			))}
@@ -123,122 +131,40 @@ function BlockRenderer({
 	block: Block;
 } & Omit<ListLayoutProps, "blocks" | "taskItems" | "allProjects" | "taskFolders">) {
 	const [editingFolderId, setEditingFolderId] = useState<Id<"taskFolders"> | null>(null);
-	const [tempFolderTitle, setTempFolderTitle] = useState("");
 
 	if (block.kind === "project") {
 		return (
-			<div className="mt-8 select-none rounded-md">
-				<div className="group flex flex-row items-center gap-4 px-3">
-					<RichIcon
-						iconData={Constants.DynamicIcons.PROJECT(block.value.color)}
-						size={24}
-					/>
+			<ProjectBlockRenderer
+				block={block}
+				view={view}
 
-					<div className="flex flex-row gap-1 items-center">
-						<h2 className="text-xl font-bold">{block.value.title}</h2>
-						<button
-							className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white duration-100"
-							onClick={() => setSelectedViewId(block.value._id)}
-						>
-							<IconChevronRight size={24} />
-						</button>
-					</div>
-				</div>
+				selectedTaskItem={selectedTaskItem}
+				setSelectedTaskItem={setSelectedTaskItem}
+				setSelectedViewId={setSelectedViewId}
 
-				<hr className="mt-2 mb-4 border-slate-700" />
-
-				{block.children.map((child) => (
-					<BlockRenderer
-						key={child.value._id}
-						block={child}
-						view={view}
-
-						selectedTaskItem={selectedTaskItem}
-						setSelectedTaskItem={setSelectedTaskItem}
-						setSelectedViewId={setSelectedViewId}
-
-						taskFolderActions={taskFolderActions}
-						taskItemActions={taskItemActions}
-					/>
-				))}
-			</div>
+				taskFolderActions={taskFolderActions}
+				taskItemActions={taskItemActions}
+			/>
 		);
 	}
 
 	if (block.kind === "taskFolder") {
-		const folder = block.value as Doc<"taskFolders">;
-
 		return (
-			<div className="mt-8 select-none">
-				<div className="group flex justify-between px-4">
-					{editingFolderId !== folder._id ?
-						<div className="flex flex-row gap-1 items-center">
-							<h2 className="text-xl font-bold">{folder.title}</h2>
-							<button
-								className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white duration-100"
-								onClick={() => taskItemActions.create(folder._id)}
-							>
-								<IconPlus size={24} />
-							</button>
-						</div>
-					:	<div className="flex gap-2">
-							<input
-								className="text-xl font-bold bg-slate-800 text-white rounded-md px-2 py-1"
-								value={tempFolderTitle}
-								autoFocus
-								onChange={(e) => setTempFolderTitle(e.target.value)}
-							/>
-							<button
-								onClick={() => {
-									taskFolderActions.modify(folder._id, {
-										title: tempFolderTitle,
-									});
-									setEditingFolderId(null);
-									setTempFolderTitle("");
-								}}
-							>
-								Save
-							</button>
-						</div>
-					}
+			<TaskFolderBlockRenderer
+				editingFolderId={editingFolderId}
+				setEditingFolderId={setEditingFolderId}
 
-					<div className="flex gap-2">
-						<button
-							className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-white duration-100"
-							onClick={() => {
-								setEditingFolderId(folder._id);
-								setTempFolderTitle(folder.title);
-							}}
-						>
-							<IconPencil size={16} />
-						</button>
-						<button
-							className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 duration-100"
-							onClick={() => taskFolderActions.delete(folder._id)}
-						>
-							<IconTrash size={16} />
-						</button>
-					</div>
-				</div>
+				block={block}
+				view={view}
 
-				<hr className="mt-2 mb-4 border-slate-700" />
+				selectedTaskItem={selectedTaskItem}
+				setSelectedTaskItem={setSelectedTaskItem}
+				setSelectedViewId={setSelectedViewId}
 
-				{block.children.map((child) => (
-					<BlockRenderer
-						key={child.value._id}
-						block={child}
-						view={view}
-
-						selectedTaskItem={selectedTaskItem}
-						setSelectedTaskItem={setSelectedTaskItem}
-						setSelectedViewId={setSelectedViewId}
-
-						taskFolderActions={taskFolderActions}
-						taskItemActions={taskItemActions}
-					/>
-				))}
-			</div>
-		);
+				taskFolderActions={taskFolderActions}
+				taskItemActions={taskItemActions}
+			/>
+		)
 	}
 
 	if (block.kind === "taskItem") {
@@ -260,4 +186,164 @@ function BlockRenderer({
 	}
 
 	return null; // project ignored for now
+}
+
+function ProjectBlockRenderer(
+	{
+		block,
+		view,
+		selectedTaskItem,
+		setSelectedTaskItem,
+		setSelectedViewId,
+
+		taskItemActions,
+		taskFolderActions,
+	}: {
+		block: ProjectBlock;
+	} & Omit<ListLayoutProps, "blocks" | "taskItems" | "allProjects" | "taskFolders">
+) {
+	return (
+		<div className="mt-8 select-none rounded-md">
+			<div className="group flex flex-row items-center gap-4 px-3">
+				<RichIcon
+					iconData={Constants.DynamicIcons.PROJECT(block.value.color)}
+					size={24}
+				/>
+
+				<div className="flex flex-row gap-1 items-center">
+					<h2 className="text-xl font-bold">{block.value.title}</h2>
+					<button
+						className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white duration-100"
+						onClick={() => setSelectedViewId(block.value._id)}
+					>
+						<IconChevronRight size={24} />
+					</button>
+				</div>
+			</div>
+
+			<hr className="mt-2 mb-4 border-slate-700" />
+
+			{block.children.map((child) => (
+				<BlockRenderer
+					key={child.value._id}
+					block={child}
+					view={view}
+
+					selectedTaskItem={selectedTaskItem}
+					setSelectedTaskItem={setSelectedTaskItem}
+					setSelectedViewId={setSelectedViewId}
+
+					taskFolderActions={taskFolderActions}
+					taskItemActions={taskItemActions}
+				/>
+			))}
+		</div>
+	)
+}
+
+function TaskFolderBlockRenderer(
+	{
+		editingFolderId,
+		setEditingFolderId,
+
+		block,
+		view,
+		selectedTaskItem,
+		setSelectedTaskItem,
+		setSelectedViewId,
+
+		taskItemActions,
+		taskFolderActions,
+	}: {
+		editingFolderId: Id<"taskFolders"> | null;
+		setEditingFolderId: (id: Id<"taskFolders"> | null) => void;
+
+		block: TaskFolderBlock;
+	} & Omit<ListLayoutProps, "blocks" | "taskItems" | "allProjects" | "taskFolders">
+) {
+	const folder = block.value as Doc<"taskFolders">;
+
+	const [tempFolderTitle, setTempFolderTitle] = useState("");
+	useEffect(() => {
+		if (editingFolderId === folder._id) {
+			setTempFolderTitle(folder.title);
+		}
+	}, [editingFolderId]);
+
+	const {isDropTarget, ref} = useDroppable({
+		type: "taskFolder",
+		id: folder._id,
+		accept: "taskItem",
+		collisionPriority: 2
+	});
+
+	return (
+		<div className={"mt-8 select-none " + (isDropTarget ? "rounded-md bg-green-500/20" : "")} ref={ref}>
+			<div className="group flex justify-between px-4">
+				{editingFolderId !== folder._id ?
+					<div className="flex flex-row gap-1 items-center">
+						<h2 className="text-xl font-bold">{folder.title}</h2>
+						<button
+							className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white duration-100"
+							onClick={() => taskItemActions.create(folder._id)}
+						>
+							<IconPlus size={24} />
+						</button>
+					</div>
+				:	<div className="flex gap-2">
+						<input
+							className="text-xl font-bold bg-slate-800 text-white rounded-md px-2 py-1"
+							value={tempFolderTitle}
+							autoFocus
+							onChange={(e) => setTempFolderTitle(e.target.value)}
+						/>
+						<button
+							onClick={() => {
+								taskFolderActions.modify(folder._id, {
+									title: tempFolderTitle,
+								});
+								setEditingFolderId(null);
+								setTempFolderTitle("");
+							}}
+						>
+							Save
+						</button>
+					</div>
+				}
+
+				<div className="flex gap-2">
+					<button
+						className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-white duration-100"
+						onClick={() => {
+							setEditingFolderId(folder._id);
+							setTempFolderTitle(folder.title);
+						}}
+					>
+						<IconPencil size={16} />
+					</button>
+					<button
+						className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 duration-100"
+						onClick={() => taskFolderActions.delete(folder._id)}
+					>
+						<IconTrash size={16} />
+					</button>
+				</div>
+			</div>
+
+			<hr className="mt-2 mb-4 border-slate-700" />
+
+			{block.children.map((child) => (
+				<BlockRenderer
+					key={child.value._id}
+					block={child}
+					view={view}
+					selectedTaskItem={selectedTaskItem}
+					setSelectedTaskItem={setSelectedTaskItem}
+					setSelectedViewId={setSelectedViewId}
+					taskFolderActions={taskFolderActions}
+					taskItemActions={taskItemActions}
+				/>
+			))}
+		</div>
+	);
 }

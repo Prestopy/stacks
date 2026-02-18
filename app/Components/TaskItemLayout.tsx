@@ -24,6 +24,7 @@ import LabelWithIcon from "@/app/Components/LabelWithIcon";
 import RichIcon from "@/app/Components/RichIcon";
 import { DateOrSomeday } from "@/app/util/types/baseTypes";
 import { Actions } from "@/app/util/types/typeUtilities";
+import { useDraggable } from "@dnd-kit/react";
 
 interface TaskItemLayoutProps {
 	taskItem: Doc<"taskItems">;
@@ -46,6 +47,8 @@ export default function TaskItemLayout({
 	isSelected,
 	selectThis,
 }: TaskItemLayoutProps) {
+	const { ref: draggableRef } = useDraggable(({ type: "taskItem", id: taskItem._id }));
+
 	const [tempTextFields, setTempTextFields] = useState<{
 		title: string;
 		note: string | undefined;
@@ -75,7 +78,8 @@ export default function TaskItemLayout({
 
 	return (
 		<div
-			className={`px-4 mb-2 flex flex-row gap-5 ${isSelected ? "bg-slate-800 py-4" : "bg-transparent py-0"}     rounded-lg duration-200`}
+			className={`px-4 mb-2 flex flex-row gap-5 cursor-pointer ${isSelected ? "bg-slate-800 py-4" : "bg-transparent py-0"}     rounded-lg duration-200`}
+			ref={draggableRef}
 			onClick={(e) => {
 				e.stopPropagation();
 				selectThis();

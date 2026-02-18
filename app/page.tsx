@@ -23,6 +23,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { toBigInt, toDateOrUndefined, today } from "@/app/util/dateUtilities";
 import { TaskView, ViewId } from "@/app/util/types/baseTypes";
 import { getViewFromId, toProjectView, toUniverseView } from "@/app/util/conversionLayers";
+import { DragDropProvider, DragOverlay } from "@dnd-kit/react";
+import { createPortal } from "react-dom";
 
 export default function Home() {
 	// Queries
@@ -466,130 +468,171 @@ export default function Home() {
 		);
 	}
 	return (
-		<IconsProvider icons={TablerIcons}>
-			<div className="w-screen h-screen">
-				<div className="flex flex-row gap-0">
-					<Sidebar
-						systemSections={[
-							{ kind: "data", view: Constants.FilterViews.INBOX },
-							{ kind: "spacer" },
-							{ kind: "data", view: Constants.FilterViews.TODAY },
-							{ kind: "data", view: Constants.FilterViews.SCHEDULE, },
-							{ kind: "data", view: Constants.FilterViews.EVERYTHING },
-							{ kind: "data", view: Constants.FilterViews.FLAGGED, },
-							{ kind: "data", view: Constants.FilterViews.SOMEDAY, },
-							{ kind: "spacer" },
-							{ kind: "data", view: Constants.FilterViews.COMPLETED, },
-						]}
-						userSections={viewHierarchy}
-						selectedView={selectedView}
-						setSelectedViewId={setSelectedViewId}
-						universeActions={{
-							create: createUniverse,
-							modify: null,
-							delete: deleteUniverse,
-						}}
-						projectActions={{
-							create: createProject,
-							modify: null,
-							delete: deleteProject,
-						}}
-					/>
+		<DragDropProvider onDragEnd={(event) => {
+			if (event.canceled) return;
+			const {source, target} = event.operation;
+			if (target?.type === "taskFolder" && source?.type === "taskItem") {
+				modifyTaskItem(source.id as Id<"taskItems">, {
+					parentTaskFolder: target.id as Id<"taskFolders">
+				})
+			} else if (target?.type === "noTaskFolder" && source?.type === "taskItem") {
+				modifyTaskItem(source.id as Id<"taskItems">, {
+					parentTaskFolder: null
+				})
+			}
+		}}>
+			<IconsProvider icons={TablerIcons}>
+				{/*<DragOverlay*/}
+				{/*	tag="div"*/}
+				{/*	className="px-4 py-2 bg-slate-800 rounded-lg cursor-grabbing border border-slate-700 shadow-2xl"*/}
+				{/*	dropAnimation={null}*/}
+				{/*>*/}
+				{/*	{(source) => {*/}
+				{/*		// 1. Check if source exists*/}
+				{/*		if (!source) return null;*/}
 
-					{taskItemsForView !== undefined && taskFoldersForView !== undefined ?
-						<div className="flex flex-col w-full h-screen">
-							<div className="flex-1 flex overflow-auto">
-								<MainView
-									options={
-										selectedView.kind === "systemFilter" ?
-											{
-												kind: "systemFilter",
-												view: selectedView,
-											}
-										: selectedView.kind === "universe" ?
-											{
-												kind: "universe",
-												view: selectedView,
-												thisActions: {
-													create: null,
-													modify: (mods: UniverseModifications) => modifyUniverse(selectedView.id, mods),
-													delete: () => deleteUniverse(selectedView.id)
-												},
-											}
-										:	{
-												kind: "project",
-												view: selectedView,
-												deadline: toDateOrUndefined(
-													withProject(selectedView.id)?.deadline,
-												),
-												thisActions: {
-													create: null,
-													modify: (mods: ProjectModifications) => modifyProject(selectedView.id, mods),
-													delete: () => deleteProject(selectedView.id),
+				{/*		// 2. Access data safely.*/}
+				{/*		// dnd-kit/react puts your custom data in source.data*/}
+				{/*		const id = source.id;*/}
+				{/*		const type = source.type*/}
+
+				{/*		if (type === "taskItem") {*/}
+				{/*			const item = withTaskItem(id as Id<"taskItems">);*/}
+				{/*			if (!item) return;*/}
+
+				{/*			return (*/}
+				{/*				<>{item.title || "Untitled Task"}</>*/}
+				{/*			);*/}
+				{/*		}*/}
+
+				{/*		return null;*/}
+				{/*	}}*/}
+				{/*</DragOverlay>*/}
+
+				<div className="w-screen h-screen">
+					<div className="flex flex-row gap-0">
+						<Sidebar
+							systemSections={[
+								{ kind: "data", view: Constants.FilterViews.INBOX },
+								{ kind: "spacer" },
+								{ kind: "data", view: Constants.FilterViews.TODAY },
+								{ kind: "data", view: Constants.FilterViews.SCHEDULE, },
+								{ kind: "data", view: Constants.FilterViews.EVERYTHING },
+								{ kind: "data", view: Constants.FilterViews.FLAGGED, },
+								{ kind: "data", view: Constants.FilterViews.SOMEDAY, },
+								{ kind: "spacer" },
+								{ kind: "data", view: Constants.FilterViews.COMPLETED, },
+							]}
+							userSections={viewHierarchy}
+							selectedView={selectedView}
+							setSelectedViewId={setSelectedViewId}
+							universeActions={{
+								create: createUniverse,
+								modify: null,
+								delete: deleteUniverse,
+							}}
+							projectActions={{
+								create: createProject,
+								modify: null,
+								delete: deleteProject,
+							}}
+						/>
+
+						{taskItemsForView !== undefined && taskFoldersForView !== undefined ?
+							<div className="flex flex-col w-full h-screen">
+								<div className="flex-1 flex overflow-auto">
+									<MainView
+										options={
+											selectedView.kind === "systemFilter" ?
+												{
+													kind: "systemFilter",
+													view: selectedView,
 												}
-											}
+											: selectedView.kind === "universe" ?
+												{
+													kind: "universe",
+													view: selectedView,
+													thisActions: {
+														create: null,
+														modify: (mods: UniverseModifications) => modifyUniverse(selectedView.id, mods),
+														delete: () => deleteUniverse(selectedView.id)
+													},
+												}
+											:	{
+													kind: "project",
+													view: selectedView,
+													deadline: toDateOrUndefined(
+														withProject(selectedView.id)?.deadline,
+													),
+													thisActions: {
+														create: null,
+														modify: (mods: ProjectModifications) => modifyProject(selectedView.id, mods),
+														delete: () => deleteProject(selectedView.id),
+													}
+												}
 
-									}
-
-									taskItems={taskItemsForView}
-									taskFolders={taskFoldersForView}
-									allProjects={allProjects}
-
-									selectedTaskItem={selectedTaskItem}
-									setSelectedTaskItem={setSelectedTaskItem}
-									setSelectedViewId={setSelectedViewId}
-
-									taskItemActions={{
-										create: (taskFolderId?: Id<"taskFolders"> | undefined, startDate?: Date | undefined) => createTaskItem(selectedView, taskFolderId, startDate),
-										modify: modifyTaskItem,
-										delete: null,
-									}}
-									taskFolderActions={{
-										create: null,
-										modify: modifyTaskFolder,
-										delete: deleteTaskFolder,
-									}}
-								/>
-							</div>
-							<div className="shrink-0">
-								<Actionbar
-									universes={allUniverses}
-									projects={allProjects}
-									taskFolders={taskFoldersForView}
-									isFilterView={selectedView.kind === "systemFilter"}
-									isTaskItemSelected={selectedTaskItem !== null}
-
-									taskItemActions={{
-										create: () => createTaskItem(selectedView),
-										modify: null,
-										delete: null
-									}}
-									taskFolderActions={{
-										create: () => createTaskFolder(selectedView),
-										modify: null,
-										delete: null
-									}}
-									selectedTaskItemActions={{
-										create: null,
-										modify: (mods: TaskItemModifications) => {
-											if (selectedTaskItem !== null)
-												return modifyTaskItem(selectedTaskItem, mods);
-											return Promise.reject();
-										},
-										delete: () => {
-											if (selectedTaskItem !== null) {
-												setSelectedTaskItem(null);
-												return deleteTaskItem(selectedTaskItem);
-											}
-											return Promise.reject();
 										}
-									}}
-								/>
+
+										taskItems={taskItemsForView}
+										taskFolders={taskFoldersForView}
+										allProjects={allProjects}
+
+										selectedTaskItem={selectedTaskItem}
+										setSelectedTaskItem={setSelectedTaskItem}
+										setSelectedViewId={setSelectedViewId}
+
+										taskItemActions={{
+											create: (taskFolderId?: Id<"taskFolders"> | undefined, startDate?: Date | undefined) => createTaskItem(selectedView, taskFolderId, startDate),
+											modify: modifyTaskItem,
+											delete: null,
+										}}
+										taskFolderActions={{
+											create: null,
+											modify: modifyTaskFolder,
+											delete: deleteTaskFolder,
+										}}
+									/>
+								</div>
+								<div className="shrink-0">
+									<Actionbar
+										universes={allUniverses}
+										projects={allProjects}
+										taskFolders={taskFoldersForView}
+										isFilterView={selectedView.kind === "systemFilter"}
+										isTaskItemSelected={selectedTaskItem !== null}
+
+										taskItemActions={{
+											create: () => createTaskItem(selectedView),
+											modify: null,
+											delete: null
+										}}
+										taskFolderActions={{
+											create: () => createTaskFolder(selectedView),
+											modify: null,
+											delete: null
+										}}
+										selectedTaskItemActions={{
+											create: null,
+											modify: (mods: TaskItemModifications) => {
+												if (selectedTaskItem !== null)
+													return modifyTaskItem(selectedTaskItem, mods);
+												return Promise.reject();
+											},
+											delete: () => {
+												if (selectedTaskItem !== null) {
+													setSelectedTaskItem(null);
+													return deleteTaskItem(selectedTaskItem);
+												}
+												return Promise.reject();
+											}
+										}}
+									/>
+								</div>
 							</div>
-						</div>
-					:	<div className="flex-1 bg-slate-900" />}
+						:	<div className="flex-1 bg-slate-900" />}
+					</div>
 				</div>
-			</div>
-		</IconsProvider>
+			</IconsProvider>
+		</DragDropProvider>
 	);
 }
