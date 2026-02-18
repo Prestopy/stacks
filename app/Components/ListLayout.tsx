@@ -13,7 +13,7 @@ import RichIcon from "@/app/Components/RichIcon";
 import Constants from "@/app/util/constants";
 import { ViewId } from "@/app/util/types/baseTypes";
 import { Actions } from "@/app/util/types/typeUtilities";
-import { useDroppable } from "@dnd-kit/react";
+import { useDragDropMonitor, useDroppable } from "@dnd-kit/react";
 
 interface ListLayoutProps {
 	taskItems: Doc<"taskItems">[];
@@ -109,8 +109,18 @@ export default function ListLayout(props: ListLayoutProps) {
 		collisionPriority: 1
 	});
 
+	const [draggingNow, setDraggingNow] = useState(false);
+	useDragDropMonitor({
+		onDragStart(event, manager) {
+			setDraggingNow(true);
+		},
+		onDragEnd(event, manager) {
+			setDraggingNow(false);
+		}
+	});
+
 	return (
-		<div className={"p-px " + (isDropTarget ? "rounded-md bg-green-500/20" : "")} ref={ref}>
+		<div className={"transition-[padding] duration-100 " + (draggingNow ? "pt-8 " : "") + (isDropTarget ? "rounded-md bg-green-500/20" : "")} ref={ref}>
 			{blocks.map((block) => (
 				<BlockRenderer key={block.value._id} block={block} {...props} />
 			))}
