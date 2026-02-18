@@ -8,7 +8,7 @@ import {
 	UniverseView,
 } from "@/app/util/types/types";
 import { IconChevronRight, IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import RichIcon from "@/app/Components/RichIcon";
 import Constants from "@/app/util/constants";
 import { ViewId } from "@/app/util/types/baseTypes";
@@ -127,10 +127,10 @@ export default function ListLayout(props: ListLayoutProps) {
 
 	const [draggingNow, setDraggingNow] = useState(false);
 	useDragDropMonitor({
-		onDragStart(event, manager) {
+		onDragStart() {
 			setDraggingNow(true);
 		},
-		onDragEnd(event, manager) {
+		onDragEnd() {
 			setDraggingNow(false);
 		}
 	});
@@ -228,8 +228,6 @@ function BlockRenderer({
 			}
 		</div>
 	)
-
-	return null; // project ignored for now
 }
 
 function ProjectBlockRenderer(
@@ -246,19 +244,25 @@ function ProjectBlockRenderer(
 		block: ProjectBlock;
 	} & Omit<ListLayoutProps, "blocks" | "taskItems" | "allProjects" | "taskFolders">
 ) {
+	const project = block.value as Doc<"projects">;
+
+	const {isDropTarget, ref} = useDroppable({
+		type: "project",
+		id: project._id,
+		accept: "taskItem",
+		collisionPriority: 2
+	});
+
 	return (
-		<div className="select-none rounded-md">
+		<div ref={ref} className={"select-none rounded-md " + (isDropTarget ? "bg-green-500/20" : "")}>
 			<div className="group flex flex-row items-center gap-4 px-3">
-				<RichIcon
-					iconData={Constants.DynamicIcons.PROJECT(block.value.color)}
-					size={24}
-				/>
+				<RichIcon iconData={Constants.DynamicIcons.PROJECT(project.color)} size={24} />
 
 				<div className="flex flex-row gap-1 items-center">
-					<h2 className="text-xl font-bold">{block.value.title}</h2>
+					<h2 className="text-xl font-bold">{project.title}</h2>
 					<button
 						className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white duration-100"
-						onClick={() => setSelectedViewId(block.value._id)}
+						onClick={() => setSelectedViewId(project._id)}
 					>
 						<IconChevronRight size={24} />
 					</button>
@@ -272,17 +276,15 @@ function ProjectBlockRenderer(
 					key={child.value._id}
 					block={child}
 					view={view}
-
 					selectedTaskItem={selectedTaskItem}
 					setSelectedTaskItem={setSelectedTaskItem}
 					setSelectedViewId={setSelectedViewId}
-
 					taskFolderActions={taskFolderActions}
 					taskItemActions={taskItemActions}
 				/>
 			))}
 		</div>
-	)
+	);
 }
 
 function TaskFolderBlockRenderer(
