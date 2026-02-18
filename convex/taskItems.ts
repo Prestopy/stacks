@@ -180,27 +180,29 @@ export const updateTaskItem = mutation({
 			// (only one or none can be provided from: parentUniverse, parentProject, or parentTaskFolder)
 		}
 
-		const { parentUniverse, parentProject, parentTaskFolder } = args.modifications;
-		let activeProjectId = parentProject;
-		let activeUniverseId = parentUniverse;
+		if (parents.length === 1) {
+			const { parentUniverse, parentProject, parentTaskFolder } = args.modifications;
+			let activeProjectId = parentProject;
+			let activeUniverseId = parentUniverse;
 
-		if (parentTaskFolder) {
-			const folder = await ctx.db.get("taskFolders", parentTaskFolder);
-			if (!folder) throw new Error("Task Folder not found");
+			if (parentTaskFolder) {
+				const folder = await ctx.db.get("taskFolders", parentTaskFolder);
+				if (!folder) throw new Error("Task Folder not found");
 
-			// Inherit project or universe from the folder
-			activeProjectId = folder.parentProject ?? null;
-			activeUniverseId = folder.parentUniverse ?? null;
+				// Inherit project or universe from the folder
+				activeProjectId = folder.parentProject ?? null;
+				activeUniverseId = folder.parentUniverse ?? null;
+			}
+			if (activeProjectId) {
+				const project = await ctx.db.get("projects", activeProjectId);
+				if (!project) throw new Error("Project not found");
+
+				// Inherit universe from the project
+				activeUniverseId = project.parentUniverse;
+			}
+			args.modifications.parentProject = activeProjectId;
+			args.modifications.parentUniverse = activeUniverseId;
 		}
-		if (activeProjectId) {
-			const project = await ctx.db.get("projects", activeProjectId);
-			if (!project) throw new Error("Project not found");
-
-			// Inherit universe from the project
-			activeUniverseId = project.parentUniverse;
-		}
-		args.modifications.parentProject = activeProjectId;
-		args.modifications.parentUniverse = activeUniverseId;
 
 		for (const key in args.modifications) {
 			if (args.modifications[key as keyof typeof args.modifications] === null) {
