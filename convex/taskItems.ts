@@ -167,29 +167,44 @@ export const updateTaskItem = mutation({
 		}),
 	},
 	handler: async (ctx, args) => {
-		if (args.modifications.parentProject && args.modifications.parentUniverse) {
-			throw new Error(
-				"only one or none can be provided from: _parentUniverseId or _parentProjectId.",
-			);
+		// ENSURE VALIDITY OF PROJECT & UNIVERSE RELATIONSHIP CHANGES
+		const parents = [
+			args.modifications.parentUniverse,
+			args.modifications.parentProject,
+			args.modifications.parentTaskFolder, // Fixed name
+			args.modifications.parentTaskItem
+		].filter(Boolean);
+
+		if (parents.length > 1) {
+			throw new Error("Only one direct parent container may be provided to avoid conflicts in inheritance.");
+			// (only one or none can be provided from: parentUniverse, parentProject, or parentTaskFolder)
 		}
 
-		if (args.modifications.parentProject) {
-			const project = await ctx.db.get(
-				"projects",
-				args.modifications.parentProject,
-			);
+		const { parentUniverse, parentProject, parentTaskFolder } = args.modifications;
+		let activeProjectId = parentProject;
+		let activeUniverseId = parentUniverse;
+
+		if (parentTaskFolder) {
+			const folder = await ctx.db.get("taskFolders", parentTaskFolder);
+			if (!folder) throw new Error("Task Folder not found");
+
+			// Inherit project or universe from the folder
+			activeProjectId = folder.parentProject ?? null;
+			activeUniverseId = folder.parentUniverse ?? null;
+		}
+		if (activeProjectId) {
+			const project = await ctx.db.get("projects", activeProjectId);
 			if (!project) throw new Error("Project not found");
 
-			args.modifications.parentUniverse = project.parentUniverse;
+			// Inherit universe from the project
+			activeUniverseId = project.parentUniverse;
 		}
+		args.modifications.parentProject = activeProjectId;
+		args.modifications.parentUniverse = activeUniverseId;
 
 		for (const key in args.modifications) {
-			if (
-				args.modifications[key as keyof typeof args.modifications] ===
-				null
-			) {
-				args.modifications[key as keyof typeof args.modifications] =
-					undefined;
+			if (args.modifications[key as keyof typeof args.modifications] === null) {
+				args.modifications[key as keyof typeof args.modifications] = undefined;
 			}
 		}
 
