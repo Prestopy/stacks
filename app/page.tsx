@@ -485,6 +485,7 @@ export default function Home() {
 						modifyTaskItem(source.id as Id<"taskItems">, {
 							parentTaskFolder: null
 						});
+						break;
 					case "project":
 						modifyTaskItem(source.id as Id<"taskItems">, {
 							parentProject: target.id as Id<"projects">,
