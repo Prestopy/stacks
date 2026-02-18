@@ -1,7 +1,7 @@
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import TaskItemLayout from "@/app/Components/TaskItemLayout";
 import {
-	Block, FilterView, ProjectBlock,
+	Block, EmptyContainerBlock, FilterView, ProjectBlock,
 	ProjectView, TaskFolderBlock,
 	TaskFolderModifications, TaskItemBlock,
 	TaskItemModifications,
@@ -68,7 +68,15 @@ export default function ListLayout(props: ListLayoutProps) {
 				(itemBlock) => !itemBlock.value.parentTaskFolder,
 			);
 
-			return [...ungroupedItems, ...folderBlocks];
+			if (ungroupedItems.length > 0) {
+				const emptyBlock: EmptyContainerBlock = {
+					kind: "emptyContainer" as const,
+					value: null,
+					children: ungroupedItems
+				}
+
+				return [emptyBlock, ...folderBlocks];
+			} else return folderBlocks;
 		} else {
 			// filter (system) view
 			// Folder blocks for any folders that contain items in the current view
@@ -98,7 +106,15 @@ export default function ListLayout(props: ListLayoutProps) {
 				(itemBlock) => !itemBlock.value.parentProject && !itemBlock.value.parentTaskFolder,
 			);
 
-			return [...ungroupedItems, ...projectBlocks, ...folderBlocks];
+			if (ungroupedItems.length > 0) {
+				const emptyBlock: EmptyContainerBlock = {
+					kind: "emptyContainer" as const,
+					value: null,
+					children: ungroupedItems
+				}
+
+				return [emptyBlock, ...projectBlocks, ...folderBlocks];
+			} else return [...projectBlocks, ...folderBlocks];
 		}
 	}, [allProjects, view.kind, taskFolders, taskItems])
 
@@ -120,9 +136,9 @@ export default function ListLayout(props: ListLayoutProps) {
 	});
 
 	return (
-		<div className={"transition-[padding] duration-100 " + (draggingNow ? "pt-8 " : "") + (isDropTarget ? "rounded-md bg-green-500/20" : "")} ref={ref}>
+		<div className={"flex flex-col gap-8 transition-[padding] duration-100 " + (draggingNow && !blocks.some(p => p.kind === "emptyContainer") ? "pt-16 " : "") + (isDropTarget ? "rounded-md bg-green-500/20" : "")} ref={ref}>
 			{blocks.map((block) => (
-				<BlockRenderer key={block.value._id} block={block} {...props} />
+				<BlockRenderer key={block.value?._id ?? "empty"} block={block} {...props} />
 			))}
 		</div>
 	);
@@ -142,58 +158,76 @@ function BlockRenderer({
 } & Omit<ListLayoutProps, "blocks" | "taskItems" | "allProjects" | "taskFolders">) {
 	const [editingFolderId, setEditingFolderId] = useState<Id<"taskFolders"> | null>(null);
 
-	if (block.kind === "project") {
-		return (
-			<ProjectBlockRenderer
-				block={block}
-				view={view}
+	return (
+		<div>
+			{
+				block.kind === "project" && (
+					<ProjectBlockRenderer
+						block={block}
+						view={view}
 
-				selectedTaskItem={selectedTaskItem}
-				setSelectedTaskItem={setSelectedTaskItem}
-				setSelectedViewId={setSelectedViewId}
+						selectedTaskItem={selectedTaskItem}
+						setSelectedTaskItem={setSelectedTaskItem}
+						setSelectedViewId={setSelectedViewId}
 
-				taskFolderActions={taskFolderActions}
-				taskItemActions={taskItemActions}
-			/>
-		);
-	}
+						taskFolderActions={taskFolderActions}
+						taskItemActions={taskItemActions}
+					/>
+				)
+			}
+			{
+				block.kind === "taskFolder" && (
+					<TaskFolderBlockRenderer
+						editingFolderId={editingFolderId}
+						setEditingFolderId={setEditingFolderId}
 
-	if (block.kind === "taskFolder") {
-		return (
-			<TaskFolderBlockRenderer
-				editingFolderId={editingFolderId}
-				setEditingFolderId={setEditingFolderId}
+						block={block}
+						view={view}
 
-				block={block}
-				view={view}
+						selectedTaskItem={selectedTaskItem}
+						setSelectedTaskItem={setSelectedTaskItem}
+						setSelectedViewId={setSelectedViewId}
 
-				selectedTaskItem={selectedTaskItem}
-				setSelectedTaskItem={setSelectedTaskItem}
-				setSelectedViewId={setSelectedViewId}
-
-				taskFolderActions={taskFolderActions}
-				taskItemActions={taskItemActions}
-			/>
-		)
-	}
-
-	if (block.kind === "taskItem") {
-		const item = block.value as Doc<"taskItems">;
-
-		return (
-			<TaskItemLayout
-				taskItem={item}
-				isSelected={selectedTaskItem === item._id}
-				showTodayIcon={view.kind !== "systemFilter" || view.id !== "today"}
-				thisActions={{
-					create: null,
-					modify: taskItemActions.modify.bind(null, item._id),
-					delete: null,
-				}}
-				selectThis={() => setSelectedTaskItem(item._id)}
-			/>
-		);
-	}
+						taskFolderActions={taskFolderActions}
+						taskItemActions={taskItemActions}
+					/>
+				)
+			}
+			{
+				block.kind === "emptyContainer" && (
+					<div>
+						{block.children.map((child) => (
+							<BlockRenderer
+								key={child.value._id}
+								block={child}
+								view={view}
+								selectedTaskItem={selectedTaskItem}
+								setSelectedTaskItem={setSelectedTaskItem}
+								setSelectedViewId={setSelectedViewId}
+								taskFolderActions={taskFolderActions}
+								taskItemActions={taskItemActions}
+							/>
+						))}
+					</div>
+				)
+			}
+			{
+				block.kind === "taskItem" && (
+					<TaskItemLayout
+						taskItem={block.value}
+						isSelected={selectedTaskItem === block.value._id}
+						showTodayIcon={view.kind !== "systemFilter" || view.id !== "today"}
+						thisActions={{
+							create: null,
+							modify: taskItemActions.modify.bind(null, block.value._id),
+							delete: null,
+						}}
+						selectThis={() => setSelectedTaskItem(block.value._id)}
+					/>
+				)
+			}
+		</div>
+	)
 
 	return null; // project ignored for now
 }
@@ -213,7 +247,7 @@ function ProjectBlockRenderer(
 	} & Omit<ListLayoutProps, "blocks" | "taskItems" | "allProjects" | "taskFolders">
 ) {
 	return (
-		<div className="mt-8 select-none rounded-md">
+		<div className="select-none rounded-md">
 			<div className="group flex flex-row items-center gap-4 px-3">
 				<RichIcon
 					iconData={Constants.DynamicIcons.PROJECT(block.value.color)}
@@ -288,7 +322,7 @@ function TaskFolderBlockRenderer(
 	});
 
 	return (
-		<div className={"mt-8 select-none " + (isDropTarget ? "rounded-md bg-green-500/20" : "")} ref={ref}>
+		<div className={"select-none " + (isDropTarget ? "rounded-md bg-green-500/20" : "")} ref={ref}>
 			<div className="group flex justify-between px-4">
 				{editingFolderId !== folder._id ?
 					<div className="flex flex-row gap-1 items-center">

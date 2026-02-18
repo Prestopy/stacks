@@ -35,16 +35,21 @@ export interface ProjectView extends BaseView {
 }
 
 // BLOCKS
-export type Block = TaskItemBlock | TaskFolderBlock | ProjectBlock;
+export type Block = TaskItemBlock | EmptyContainerBlock | TaskFolderBlock | ProjectBlock;
 interface BaseBlock {
-	kind: Extract<NodeKind, "taskItem" | "taskFolder" | "project">;
-	value: Doc<"taskItems" | "taskFolders" | "projects">;
+	kind: "emptyContainer" | Extract<NodeKind, "taskItem" | "taskFolder" | "project">;
+	value: Doc<"taskItems" | "taskFolders" | "projects"> | null;
 	children?: Block[];
 }
 export interface TaskItemBlock extends BaseBlock {
 	kind: "taskItem";
 	value: Doc<"taskItems">;
 	children?: [];
+}
+export interface EmptyContainerBlock extends BaseBlock {
+	kind: "emptyContainer";
+	value: null;
+	children: TaskItemBlock[];
 }
 export interface TaskFolderBlock extends BaseBlock {
 	kind: "taskFolder";
