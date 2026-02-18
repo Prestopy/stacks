@@ -305,14 +305,16 @@ function TaskFolderBlockRenderer(
 		block: TaskFolderBlock;
 	} & Omit<ListLayoutProps, "blocks" | "taskItems" | "allProjects" | "taskFolders">
 ) {
+	// FIXME: You can edit multiple folders anyways because BlockRenderer is rendered individually for each task folder
+	// so passing it as a prop does absolutely nothing.
 	const folder = block.value as Doc<"taskFolders">;
 
 	const [tempFolderTitle, setTempFolderTitle] = useState("");
-	useEffect(() => {
-		if (editingFolderId === folder._id) {
-			setTempFolderTitle(folder.title);
-		}
-	}, [editingFolderId]);
+	// useEffect(() => {
+	// 	if (editingFolderId === folder._id) {
+	// 		setTempFolderTitle(folder.title);
+	// 	}
+	// }, [editingFolderId]);
 
 	const {isDropTarget, ref} = useDroppable({
 		type: "taskFolder",

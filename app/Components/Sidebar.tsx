@@ -192,20 +192,24 @@ function SidebarButton({
 		setProjectTitle("");
 	};
 
-	const {isDropTarget, ref} = useDroppable({
+	const { isDropTarget, ref } = useDroppable({
 		type: view.kind,
 		id: view.id,
-		accept: "taskItem"
+		accept: "taskItem",
+		disabled: view.kind === "systemFilter",
 	});
 
 	return (
 		<button
 			ref={ref}
-			className={(isDropTarget ? "bg-green-500/20 " : "") + `group flex flex-row justify-between items-center px-4 py-1 w-full ${
-				!isChild ? "font-bold text-slate-300"
-				: !isSelected ? "text-slate-400"
-				: "text-slate-300"
-			} text-left ${isSelected ? "bg-white/5" : ""} hover:bg-white/5 duration-100 rounded-lg flex items-center gap-2`}
+			className={
+				`group flex flex-row justify-between items-center px-4 py-1 w-full ${
+					!isChild ? "font-bold text-slate-300"
+					: !isSelected ? "text-slate-400"
+					: "text-slate-300"
+				} text-left ${isSelected ? "bg-white/5" : ""} hover:bg-white/5 duration-100 rounded-lg flex items-center gap-2 ` +
+				(isDropTarget ? "!bg-green-500/20" : "")
+			}
 			onClick={() => setSelectedViewId(view.id)}
 		>
 			<div className="flex flex-row items-center gap-2 leading-tight">

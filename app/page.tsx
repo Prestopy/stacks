@@ -486,6 +486,8 @@ export default function Home() {
 							parentTaskFolder: null
 						});
 						break;
+					case "systemFilter":
+						break;
 					case "project":
 						modifyTaskItem(source.id as Id<"taskItems">, {
 							parentProject: target.id as Id<"projects">,
