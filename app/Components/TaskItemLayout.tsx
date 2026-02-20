@@ -198,7 +198,8 @@ export default function TaskItemLayout({
 							/>
 						</div>
 						<textarea
-							className="w-full min-h-8 h-16 max-h-32 mt-2 text-slate-300 placeholder-slate-400"
+							className="w-full min-h-16 max-h-64 field-sizing-content mt-2 text-slate-300 placeholder-slate-400"
+
 							placeholder="Note..."
 							value={tempTextFields.note}
 							onChange={(e) => {
