@@ -155,7 +155,7 @@ export default function UpcomingLayout({
 	}, [taskItems]);
 
 	return (
-		<div className="flex flex-col gap-4">
+		<div className="flex flex-col gap-12">
 			{blocks.map((block) => (
 				<div key={block.value.date.toISOString()}>
 					<div className="group flex flex-row items-center gap-4 px-3 select-none">
@@ -285,7 +285,6 @@ export function BlockChildren({
 									</span>{" "}
 									<span className="pl-4 text-slate-400">
 										{specificDeadline ? format(item.value.date, "MM/dd 'at' HH:mm") : format(item.value.date, "HH:mm")}
-										{" "}q2{item.value.date.getTime()}
 									</span>
 								</p>
 							</div>
