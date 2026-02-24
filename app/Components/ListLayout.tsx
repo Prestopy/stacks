@@ -101,9 +101,9 @@ export default function ListLayout(props: ListLayoutProps) {
 				}))
 				.filter((pb) => pb.children.length > 0);
 
-			// items not in projects and not in folders
+			// items not in projects
 			const ungroupedItems = itemBlocks.filter(
-				(itemBlock) => !itemBlock.value.parentProject && !itemBlock.value.parentTaskFolder,
+				(itemBlock) => !itemBlock.value.parentProject,
 			);
 
 			if (ungroupedItems.length > 0) {

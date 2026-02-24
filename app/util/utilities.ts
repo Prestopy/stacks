@@ -4,6 +4,7 @@ import {
 	UniverseView,
 } from "@/app/util/types/types";
 import { DateOrSomeday, TaskView } from "@/app/util/types/baseTypes";
+import { toDate } from "@/app/util/dateUtilities";
 
 export function capitalize(str: string) {
 	if (str.length === 0) return str;
@@ -27,7 +28,7 @@ export function filterTaskItems(taskItems: Doc<"taskItems">[], view: TaskView) {
 					(todo) =>
 						!todo.isCompleted &&
 						todo.startDate !== undefined &&
-						todo.startDate < startOfTomorrow.getTime(),
+						toDate(todo.startDate).getTime() < startOfTomorrow.getTime(),
 				);
 			}
 			case "everything":

@@ -23,8 +23,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { toBigInt, toDateOrUndefined, today } from "@/app/util/dateUtilities";
 import { TaskView, ViewId } from "@/app/util/types/baseTypes";
 import { getViewFromId, toProjectView, toUniverseView } from "@/app/util/conversionLayers";
-import { DragDropProvider, DragOverlay } from "@dnd-kit/react";
-import { createPortal } from "react-dom";
+import { DragDropProvider } from "@dnd-kit/react";
 
 export default function Home() {
 	// Queries
