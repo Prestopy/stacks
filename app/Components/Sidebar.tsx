@@ -20,6 +20,7 @@ import { TaskView, ViewId } from "@/app/util/types/baseTypes";
 import { Actions } from "@/app/util/types/typeUtilities";
 import ViewDeleteDialogContent from "@/app/Components/ViewDeleteDialogContent";
 import { useDroppable } from "@dnd-kit/react";
+import { createDropId } from "@/app/util/dragndrop";
 
 type Section = Divider | Spacer | Data;
 
@@ -193,8 +194,7 @@ function SidebarButton({
 	};
 
 	const { isDropTarget, ref } = useDroppable({
-		type: view.kind,
-		id: view.id,
+		id: createDropId(view.id, view.kind, "sidebar"),
 		accept: "taskItem",
 		disabled: view.kind === "systemFilter",
 	});

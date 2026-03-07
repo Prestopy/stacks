@@ -25,12 +25,14 @@ import RichIcon from "@/app/Components/RichIcon";
 import { DateOrSomeday } from "@/app/util/types/baseTypes";
 import { Actions } from "@/app/util/types/typeUtilities";
 import { useDraggable } from "@dnd-kit/react";
+import { createDragId } from "@/app/util/dragndrop";
 
 interface TaskItemLayoutProps {
 	taskItem: Doc<"taskItems">;
 	isSelected: boolean;
 
-	showTodayIcon: boolean;
+	showTodayIcon?: boolean;
+	hideStartDateBadge?: boolean;
 
 	thisActions: Actions<
 		null,
@@ -42,12 +44,16 @@ interface TaskItemLayoutProps {
 
 export default function TaskItemLayout({
 	showTodayIcon,
+	hideStartDateBadge,
 	taskItem,
 	thisActions,
 	isSelected,
 	selectThis,
 }: TaskItemLayoutProps) {
-	const { ref: draggableRef } = useDraggable(({ type: "taskItem", id: taskItem._id }));
+	const { ref: draggableRef } = useDraggable(({
+		type: "taskItem", // only for droppable zones. This won't be used for identification.
+		id: createDragId(taskItem._id, "taskItem", "mainView")
+	}));
 
 	const [tempTextFields, setTempTextFields] = useState<{
 		title: string;
@@ -123,7 +129,7 @@ export default function TaskItemLayout({
 				{!isSelected ?
 					<div className="flex flex-row justify-between">
 						<h2 className="text-lg">
-							{taskItem.startDate && !isToday(taskItem.startDate) ?
+							{!hideStartDateBadge && taskItem.startDate && !isToday(taskItem.startDate) ?
 								<span
 									className={`inline-flex align-middle mr-2 px-2 py-0.5
 											${

@@ -15,6 +15,8 @@ import { IconPlus } from "@tabler/icons-react";
 import { addDays, differenceInCalendarDays, format } from "date-fns";
 import RichIcon from "@/app/Components/RichIcon";
 import Constants from "@/app/util/constants";
+import { useDroppable } from "@dnd-kit/react";
+import { createDropId } from "@/app/util/dragndrop";
 
 interface UpcomingLayoutProps {
 	taskItems: Doc<"taskItems">[];
@@ -157,49 +159,13 @@ export default function UpcomingLayout({
 	return (
 		<div className="flex flex-col gap-12">
 			{blocks.map((block) => (
-				<div key={block.value.date.toISOString()}>
-					<div className="group flex flex-row items-center gap-4 px-3 select-none">
-						<div className="flex flex-row gap-3 items-end">
-							{/*DAY NUMBER*/}
-							<div className="flex flex-col items-center">
-								{today().getMonth() !== block.value.date.getMonth() ?
-									<p className="text-sm">
-										{format(block.value.date, "MMM").toLowerCase()}
-									</p>
-								:	null}
-								<h2 className="text-3xl font-bold font-mono">
-									{block.value.date.getDate().toString().padStart(2, "0")}
-								</h2>
-							</div>
-
-							{/*DAY NAME*/}
-							<div
-								className={`flex flex-row gap-2 items-center ${isToday(block.value.date) ? "text-white" : "text-slate-400"}`}
-							>
-								<h2 className="text-xl">
-									{isToday(block.value.date) ? "Today" : format(block.value.date, "EEEE")}
-								</h2>
-								<button
-									className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white duration-100"
-									onClick={() =>
-										taskItemActions.create(undefined, toExactDate(block.value.date))
-									}
-								>
-									<IconPlus size={24} />
-								</button>
-							</div>
-						</div>
-					</div>
-
-					<hr className="mt-2 mb-4 border-slate-700" />
-
-					<BlockChildren
-						block={block}
-						selectedTaskItem={selectedTaskItem}
-						setSelectedTaskItem={setSelectedTaskItem}
-						taskItemActions={taskItemActions}
-					/>
-				</div>
+				<Block
+					key={block.value.date.toISOString()}
+					block={block}
+					selectedTaskItem={selectedTaskItem}
+					setSelectedTaskItem={setSelectedTaskItem}
+					taskItemActions={taskItemActions}
+				/>
 			))}
 			{
 				extraBlock && (
@@ -220,6 +186,64 @@ export default function UpcomingLayout({
 					</div>
 				)
 			}
+		</div>
+	);
+}
+
+export function Block({ block, selectedTaskItem, setSelectedTaskItem, taskItemActions }:
+	Pick<UpcomingLayoutProps, "selectedTaskItem" | "setSelectedTaskItem" | "taskItemActions"> &
+	{
+		block: DateBlock;
+	}
+) {
+	const {isDropTarget, ref} = useDroppable({
+		id: createDropId(block.value.date.toISOString(), "startDate", "mainView", block.value.date.toISOString()),
+		accept: "taskItem",
+	});
+
+	return (
+		<div ref={ref} className={isDropTarget ? "rounded-md bg-green-500/20" : ""}>
+			<div className="group flex flex-row items-center gap-4 px-3 select-none">
+				<div className="flex flex-row gap-3 items-end">
+					{/*DAY NUMBER*/}
+					<div className="flex flex-col items-center">
+						{today().getMonth() !== block.value.date.getMonth() ?
+							<p className="text-sm">
+								{format(block.value.date, "MMM").toLowerCase()}
+							</p>
+							:	null}
+						<h2 className="text-3xl font-bold font-mono">
+							{block.value.date.getDate().toString().padStart(2, "0")}
+						</h2>
+					</div>
+
+					{/*DAY NAME*/}
+					<div
+						className={`flex flex-row gap-2 items-center ${isToday(block.value.date) ? "text-white" : "text-slate-400"}`}
+					>
+						<h2 className="text-xl">
+							{isToday(block.value.date) ? "Today" : format(block.value.date, "EEEE")}
+						</h2>
+						<button
+							className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white duration-100"
+							onClick={() =>
+								taskItemActions.create(undefined, toExactDate(block.value.date))
+							}
+						>
+							<IconPlus size={24} />
+						</button>
+					</div>
+				</div>
+			</div>
+
+			<hr className="mt-2 mb-4 border-slate-700" />
+
+			<BlockChildren
+				block={block}
+				selectedTaskItem={selectedTaskItem}
+				setSelectedTaskItem={setSelectedTaskItem}
+				taskItemActions={taskItemActions}
+			/>
 		</div>
 	);
 }
@@ -259,7 +283,8 @@ export function BlockChildren({
 								key={item.value._id}
 								taskItem={item.value}
 								isSelected={selectedTaskItem === item.value._id}
-								showTodayIcon={true}
+								showTodayIcon
+								hideStartDateBadge
 								thisActions={{
 									create: null,
 									modify: taskItemActions.modify.bind(null, item.value._id),

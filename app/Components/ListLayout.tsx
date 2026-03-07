@@ -14,6 +14,7 @@ import Constants from "@/app/util/constants";
 import { ViewId } from "@/app/util/types/baseTypes";
 import { Actions } from "@/app/util/types/typeUtilities";
 import { useDragDropMonitor, useDroppable } from "@dnd-kit/react";
+import { createDropId } from "@/app/util/dragndrop";
 
 interface ListLayoutProps {
 	taskItems: Doc<"taskItems">[];
@@ -119,8 +120,7 @@ export default function ListLayout(props: ListLayoutProps) {
 	}, [allProjects, view.kind, taskFolders, taskItems])
 
 	const {isDropTarget, ref} = useDroppable({
-		type: "noTaskFolder",
-		id: "empty",
+		id: createDropId("empty", "noTaskFolder", "mainView"),
 		accept: "taskItem",
 		collisionPriority: 1
 	});
@@ -247,8 +247,7 @@ function ProjectBlockRenderer(
 	const project = block.value as Doc<"projects">;
 
 	const {isDropTarget, ref} = useDroppable({
-		type: "project",
-		id: project._id,
+		id: createDropId(project._id, "project", "mainView"),
 		accept: "taskItem",
 		collisionPriority: 2
 	});
@@ -319,8 +318,7 @@ function TaskFolderBlockRenderer(
 	// }, [editingFolderId]);
 
 	const {isDropTarget, ref} = useDroppable({
-		type: "taskFolder",
-		id: folder._id,
+		id: createDropId(folder._id, "taskFolder", "mainView"),
 		accept: "taskItem",
 		collisionPriority: 2
 	});

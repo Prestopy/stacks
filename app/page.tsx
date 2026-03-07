@@ -20,10 +20,12 @@ import { IconsProvider } from "tabler-dynamic-icon";
 import * as TablerIcons from "@tabler/icons-react";
 import Constants from "@/app/util/constants";
 import { Spinner } from "@/components/ui/spinner";
-import { toBigInt, toDateOrUndefined, today } from "@/app/util/dateUtilities";
+import { toBigInt, toDate, toDateOrUndefined, today } from "@/app/util/dateUtilities";
 import { TaskView, ViewId } from "@/app/util/types/baseTypes";
 import { getViewFromId, toProjectView, toUniverseView } from "@/app/util/conversionLayers";
 import { DragDropProvider } from "@dnd-kit/react";
+import { parseDragId, parseDropId } from "@/app/util/dragndrop";
+import { parseISO } from "date-fns";
 
 export default function Home() {
 	// Queries
@@ -470,11 +472,14 @@ export default function Home() {
 		<DragDropProvider onDragEnd={(event) => {
 			if (event.canceled) return;
 
-			const {source, target} = event.operation;
-			if (!source || !target) return;
+			const {source: _source, target: _target} = event.operation;
+			if (!_source || !_target) return;
 
-			if (source.type === "taskItem") {
-				switch(target.type ?? "") {
+			const source = parseDragId(_source.id.toString());
+			const target = parseDropId(_target.id.toString());
+
+			if (source.kind === "taskItem") {
+				switch(target.kind ?? "") {
 					case "taskFolder":
 						modifyTaskItem(source.id as Id<"taskItems">, {
 							parentTaskFolder: target.id as Id<"taskFolders">
@@ -498,6 +503,13 @@ export default function Home() {
 							parentUniverse: target.id as Id<"universes">,
 							parentProject: null,
 							parentTaskFolder: null,
+						});
+						break;
+					case "startDate":
+						if (target.additional === null) break;
+						console.log(target)
+						modifyTaskItem(source.id as Id<"taskItems">, {
+							startDate: toBigInt(parseISO(target.additional)),
 						});
 						break;
 				}
