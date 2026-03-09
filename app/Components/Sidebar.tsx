@@ -21,6 +21,7 @@ import { Actions } from "@/app/util/types/typeUtilities";
 import ViewDeleteDialogContent from "@/app/Components/ViewDeleteDialogContent";
 import { useDroppable } from "@dnd-kit/react";
 import { createDropId } from "@/app/util/dragndrop";
+import { useUniversalState } from "@/app/UseUniversalManager";
 
 type Section = Divider | Spacer | Data;
 
@@ -55,9 +56,6 @@ interface SidebarProps {
 	systemSections: Section[];
 	userSections: Section[];
 
-	selectedView: TaskView | null;
-	setSelectedViewId: (view: ViewId) => void;
-
 	universeActions: Actions<
 		(title?: string, desc?: string) => void,
 		null,
@@ -73,8 +71,6 @@ interface SidebarProps {
 export default function Sidebar({
 	systemSections,
 	userSections,
-	selectedView,
-	setSelectedViewId,
 
 	universeActions,
 	projectActions,
@@ -100,8 +96,6 @@ export default function Sidebar({
 			<div className="p-4">
 				<SectionList
 					sections={systemSections}
-					selectedView={selectedView}
-					setSelectedViewId={setSelectedViewId}
 				/>
 
 				<div className="relative flex flex-row justify-between items-center group">
@@ -112,8 +106,6 @@ export default function Sidebar({
 
 				<SectionList
 					sections={userSectionsWithSpacing}
-					selectedView={selectedView}
-					setSelectedViewId={setSelectedViewId}
 					universeActions={{
 						create: null,
 						modify: null,
@@ -173,8 +165,6 @@ interface SidebarButtonProps {
 	isChild?: boolean;
 	isSelected: boolean;
 
-	setSelectedViewId: (view: ViewId) => void;
-
 	createChildItem?: (projectTitle?: string) => void;
 	deleteThis?: () => void;
 }
@@ -183,10 +173,11 @@ function SidebarButton({
 	view,
 	isChild,
 	isSelected,
-	setSelectedViewId,
 	createChildItem,
 	deleteThis,
 }: SidebarButtonProps) {
+	const U = useUniversalState();
+
 	const [projectTitle, setProjectTitle] = useState("");
 
 	const handleCancel = () => {
@@ -210,7 +201,7 @@ function SidebarButton({
 				} text-left ${isSelected ? "bg-white/5" : ""} hover:bg-white/5 duration-100 rounded-lg flex items-center gap-2 ` +
 				(isDropTarget ? "!bg-green-500/20" : "")
 			}
-			onClick={() => setSelectedViewId(view.id)}
+			onClick={() => U.navigateToView(view.id)}
 		>
 			<div className="flex flex-row items-center gap-2 leading-tight">
 				<span className="inline-block">
@@ -295,8 +286,6 @@ function SidebarButton({
 
 interface BlockListProps {
 	sections: Section[];
-	selectedView: TaskView | null;
-	setSelectedViewId: (view: ViewId) => void;
 
 	projectActions?: Actions<
 		(universeId: Id<"universes">, title?: string, desc?: string) => void,
@@ -308,11 +297,11 @@ interface BlockListProps {
 
 function SectionList({
 	sections,
-	selectedView,
-	setSelectedViewId,
 	projectActions,
 	universeActions,
 }: BlockListProps) {
+	const U = useUniversalState();
+
 	return sections.map((universeOrFilterBlock, i) => {
 		if (universeOrFilterBlock.kind === "divider") {
 			return <hr key={i} className="my-3 border-slate-700" />;
@@ -324,8 +313,8 @@ function SectionList({
 			<div key={i}>
 				<SidebarButton
 					view={universeOrFilterBlock.view}
-					isSelected={selectedView?.id === universeOrFilterBlock.view.id}
-					setSelectedViewId={setSelectedViewId}
+					isSelected={U.selectedViewId === universeOrFilterBlock.view.id}
+
 					createChildItem={
 						projectActions ?
 							(projectTitle?: string) => {
@@ -353,8 +342,8 @@ function SectionList({
 								key={j}
 								isChild
 								view={projectBlock.view}
-								isSelected={selectedView?.id === projectBlock.view.id}
-								setSelectedViewId={setSelectedViewId}
+								isSelected={U.selectedViewId === projectBlock.view.id}
+
 								deleteThis={
 									projectActions ?
 										() => {

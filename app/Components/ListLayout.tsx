@@ -15,17 +15,11 @@ import { ViewId } from "@/app/util/types/baseTypes";
 import { Actions } from "@/app/util/types/typeUtilities";
 import { useDragDropMonitor, useDroppable } from "@dnd-kit/react";
 import { createDropId } from "@/app/util/dragndrop";
+import { useUniversalState } from "../UseUniversalManager";
 
 interface ListLayoutProps {
-	taskItems: Doc<"taskItems">[];
-	taskFolders: Doc<"taskFolders">[];
-	allProjects: Doc<"projects">[] | null;
-
-	view: UniverseView | ProjectView | FilterView;
-
-	selectedTaskItem: Id<"taskItems"> | null;
-	setSelectedTaskItem: (itemId: Id<"taskItems"> | null) => void;
-	setSelectedViewId: (viewId: ViewId) => void;
+	taskItemsForView: Doc<"taskItems">[];
+	taskFoldersForView: Doc<"taskFolders">[];
 
 	taskItemActions: Actions<
 		(taskFolderId?: Id<"taskFolders">) => void,
@@ -40,16 +34,19 @@ interface ListLayoutProps {
 }
 
 export default function ListLayout(props: ListLayoutProps) {
-	const { taskItems, taskFolders, allProjects, view } = props;
+	const { taskItemsForView, taskFoldersForView } = props;
+	const U = useUniversalState();
+
 	const blocks = useMemo(() => {
 		// All item blocks
-		const itemBlocks: TaskItemBlock[] = taskItems.map((item) => ({
+		const itemBlocks: TaskItemBlock[] = taskItemsForView.map((item) => ({
 			kind: "taskItem" as const,
 			value: item,
 		}));
 
-		if (view.kind === "project" || view.kind === "universe") {
-			const folderBlocks: TaskFolderBlock[] = taskFolders.map((folder) => ({
+		const viewKind = U.getView(U.selectedViewId)?.kind;
+		if (viewKind === "project" || viewKind === "universe") {
+			const folderBlocks: TaskFolderBlock[] = taskFoldersForView.map((folder) => ({
 				kind: "taskFolder" as const,
 				value: folder,
 				children: [],
@@ -81,7 +78,7 @@ export default function ListLayout(props: ListLayoutProps) {
 		} else {
 			// filter (system) view
 			// Folder blocks for any folders that contain items in the current view
-			const folderBlocks: TaskFolderBlock[] = taskFolders.map((folder) => ({
+			const folderBlocks: TaskFolderBlock[] = taskFoldersForView.map((folder) => ({
 				kind: "taskFolder" as const,
 				value: folder,
 				children: itemBlocks.filter(
@@ -91,7 +88,7 @@ export default function ListLayout(props: ListLayoutProps) {
 			}));
 
 			// Project blocks only for projects that have items in the current view
-			const projectBlocks: ProjectBlock[] = (allProjects ?? [])
+			const projectBlocks: ProjectBlock[] = (U.allProjects ?? [])
 				.map((project) => ({
 					kind: "project" as const,
 					value: project,
@@ -117,7 +114,7 @@ export default function ListLayout(props: ListLayoutProps) {
 				return [emptyBlock, ...projectBlocks, ...folderBlocks];
 			} else return [...projectBlocks, ...folderBlocks];
 		}
-	}, [allProjects, view.kind, taskFolders, taskItems])
+	}, [U, taskFoldersForView, taskItemsForView])
 
 	const {isDropTarget, ref} = useDroppable({
 		id: createDropId("empty", "noTaskFolder", "mainView"),
@@ -146,16 +143,13 @@ export default function ListLayout(props: ListLayoutProps) {
 
 function BlockRenderer({
 	block,
-	view,
-	selectedTaskItem,
-	setSelectedTaskItem,
-	setSelectedViewId,
 
 	taskItemActions,
 	taskFolderActions,
 }: {
 	block: Block;
-} & Omit<ListLayoutProps, "blocks" | "taskItems" | "allProjects" | "taskFolders">) {
+} & Omit<ListLayoutProps, "blocks" | "taskItemsForView" | "allProjects" | "taskFoldersForView">) {
+	const U = useUniversalState();
 	const [editingFolderId, setEditingFolderId] = useState<Id<"taskFolders"> | null>(null);
 
 	return (
@@ -164,11 +158,6 @@ function BlockRenderer({
 				block.kind === "project" && (
 					<ProjectBlockRenderer
 						block={block}
-						view={view}
-
-						selectedTaskItem={selectedTaskItem}
-						setSelectedTaskItem={setSelectedTaskItem}
-						setSelectedViewId={setSelectedViewId}
 
 						taskFolderActions={taskFolderActions}
 						taskItemActions={taskItemActions}
@@ -182,11 +171,6 @@ function BlockRenderer({
 						setEditingFolderId={setEditingFolderId}
 
 						block={block}
-						view={view}
-
-						selectedTaskItem={selectedTaskItem}
-						setSelectedTaskItem={setSelectedTaskItem}
-						setSelectedViewId={setSelectedViewId}
 
 						taskFolderActions={taskFolderActions}
 						taskItemActions={taskItemActions}
@@ -200,10 +184,6 @@ function BlockRenderer({
 							<BlockRenderer
 								key={child.value._id}
 								block={child}
-								view={view}
-								selectedTaskItem={selectedTaskItem}
-								setSelectedTaskItem={setSelectedTaskItem}
-								setSelectedViewId={setSelectedViewId}
 								taskFolderActions={taskFolderActions}
 								taskItemActions={taskItemActions}
 							/>
@@ -215,14 +195,14 @@ function BlockRenderer({
 				block.kind === "taskItem" && (
 					<TaskItemLayout
 						taskItem={block.value}
-						isSelected={selectedTaskItem === block.value._id}
-						showTodayIcon={view.kind !== "systemFilter" || view.id !== "today"}
+						isSelected={U.selectedTaskItemId === block.value._id}
+						showTodayIcon={U.getView(U.selectedViewId)?.kind !== "systemFilter" || U.getView(U.selectedViewId)?.id !== "today"}
 						thisActions={{
 							create: null,
 							modify: taskItemActions.modify.bind(null, block.value._id),
 							delete: null,
 						}}
-						selectThis={() => setSelectedTaskItem(block.value._id)}
+						selectThis={() => U.navigateToTaskItem(block.value._id)}
 					/>
 				)
 			}
@@ -233,17 +213,14 @@ function BlockRenderer({
 function ProjectBlockRenderer(
 	{
 		block,
-		view,
-		selectedTaskItem,
-		setSelectedTaskItem,
-		setSelectedViewId,
 
 		taskItemActions,
 		taskFolderActions,
 	}: {
 		block: ProjectBlock;
-	} & Omit<ListLayoutProps, "blocks" | "taskItems" | "allProjects" | "taskFolders">
+	} & Omit<ListLayoutProps, "blocks" | "taskItemsForView" | "allProjects" | "taskFoldersForView">
 ) {
+	const U = useUniversalState();
 	const project = block.value as Doc<"projects">;
 
 	const {isDropTarget, ref} = useDroppable({
@@ -261,7 +238,7 @@ function ProjectBlockRenderer(
 					<h2 className="text-xl font-bold">{project.title}</h2>
 					<button
 						className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white duration-100"
-						onClick={() => setSelectedViewId(project._id)}
+						onClick={() => U.navigateToView(project._id)}
 					>
 						<IconChevronRight size={24} />
 					</button>
@@ -274,10 +251,7 @@ function ProjectBlockRenderer(
 				<BlockRenderer
 					key={child.value._id}
 					block={child}
-					view={view}
-					selectedTaskItem={selectedTaskItem}
-					setSelectedTaskItem={setSelectedTaskItem}
-					setSelectedViewId={setSelectedViewId}
+
 					taskFolderActions={taskFolderActions}
 					taskItemActions={taskItemActions}
 				/>
@@ -292,10 +266,6 @@ function TaskFolderBlockRenderer(
 		setEditingFolderId,
 
 		block,
-		view,
-		selectedTaskItem,
-		setSelectedTaskItem,
-		setSelectedViewId,
 
 		taskItemActions,
 		taskFolderActions,
@@ -304,7 +274,7 @@ function TaskFolderBlockRenderer(
 		setEditingFolderId: (id: Id<"taskFolders"> | null) => void;
 
 		block: TaskFolderBlock;
-	} & Omit<ListLayoutProps, "blocks" | "taskItems" | "allProjects" | "taskFolders">
+	} & Omit<ListLayoutProps, "blocks" | "taskItemsForView" | "allProjects" | "taskFoldersForView">
 ) {
 	// FIXME: You can edit multiple folders anyways because BlockRenderer is rendered individually for each task folder
 	// so passing it as a prop does absolutely nothing.
@@ -382,10 +352,6 @@ function TaskFolderBlockRenderer(
 				<BlockRenderer
 					key={child.value._id}
 					block={child}
-					view={view}
-					selectedTaskItem={selectedTaskItem}
-					setSelectedTaskItem={setSelectedTaskItem}
-					setSelectedViewId={setSelectedViewId}
 					taskFolderActions={taskFolderActions}
 					taskItemActions={taskItemActions}
 				/>

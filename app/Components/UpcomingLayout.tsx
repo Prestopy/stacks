@@ -18,13 +18,11 @@ import RichIcon from "@/app/Components/RichIcon";
 import Constants from "@/app/util/constants";
 import { useDraggable, useDroppable } from "@dnd-kit/react";
 import { createDragId, createDropId } from "@/app/util/dragndrop";
+import { useUniversalState } from "../UseUniversalManager";
 
 interface UpcomingLayoutProps {
 	taskItems: Doc<"taskItems">[];
-	allProjects: Doc<"projects">[] | null;
 
-	selectedTaskItem: Id<"taskItems"> | null;
-	setSelectedTaskItem: (itemId: Id<"taskItems"> | null) => void;
 
 	taskItemActions: Actions<
 		(taskFolderId?: undefined, startDate?: Date | undefined) => void, // FIXME- just needs a what date option
@@ -53,11 +51,9 @@ interface DeadlineBlock {
 
 export default function UpcomingLayout({
 	taskItems,
-	allProjects,
-	selectedTaskItem,
-	setSelectedTaskItem,
 	taskItemActions,
 }: UpcomingLayoutProps) {
+	const U = useUniversalState();
 	const blocks = useMemo(() => {
 		const folderBlocks: DateBlock[] = [];
 
@@ -164,8 +160,6 @@ export default function UpcomingLayout({
 				<Block
 					key={block.value.date.toISOString()}
 					block={block}
-					selectedTaskItem={selectedTaskItem}
-					setSelectedTaskItem={setSelectedTaskItem}
 					taskItemActions={taskItemActions}
 				/>
 			))}
@@ -180,8 +174,6 @@ export default function UpcomingLayout({
 
 						<BlockChildren
 							block={extraBlock}
-							selectedTaskItem={selectedTaskItem}
-							setSelectedTaskItem={setSelectedTaskItem}
 							taskItemActions={taskItemActions}
 							specificDeadline
 						/>
@@ -192,8 +184,8 @@ export default function UpcomingLayout({
 	);
 }
 
-export function Block({ block, selectedTaskItem, setSelectedTaskItem, taskItemActions }:
-	Pick<UpcomingLayoutProps, "selectedTaskItem" | "setSelectedTaskItem" | "taskItemActions"> &
+export function Block({ block, taskItemActions }:
+	Pick<UpcomingLayoutProps, "taskItemActions"> &
 	{
 		block: DateBlock;
 	}
@@ -242,8 +234,6 @@ export function Block({ block, selectedTaskItem, setSelectedTaskItem, taskItemAc
 
 			<BlockChildren
 				block={block}
-				selectedTaskItem={selectedTaskItem}
-				setSelectedTaskItem={setSelectedTaskItem}
 				taskItemActions={taskItemActions}
 			/>
 		</div>
@@ -252,14 +242,13 @@ export function Block({ block, selectedTaskItem, setSelectedTaskItem, taskItemAc
 
 export function BlockChildren({
 	block,
-	selectedTaskItem,
-	setSelectedTaskItem,
 	taskItemActions,
 	specificDeadline,
-}: Pick<UpcomingLayoutProps, "selectedTaskItem" | "setSelectedTaskItem" | "taskItemActions"> & {
+}: Pick<UpcomingLayoutProps, "taskItemActions"> & {
 	block: DateBlock;
 	specificDeadline?: boolean;
 }) {
+	const U = useUniversalState();
 	return (
 		<>
 			{block.children
@@ -284,7 +273,7 @@ export function BlockChildren({
 							<TaskItemLayout
 								key={"task-" + item.value._id}
 								taskItem={item.value}
-								isSelected={selectedTaskItem === item.value._id}
+								isSelected={U.selectedTaskItemId === item.value._id}
 								showTodayIcon
 								hideStartDateBadge={isSameDay(toDate(item.value.startDate ?? new Date()), block.value.date)}
 								thisActions={{
@@ -292,7 +281,7 @@ export function BlockChildren({
 									modify: taskItemActions.modify.bind(null, item.value._id),
 									delete: null,
 								}}
-								selectThis={() => setSelectedTaskItem(item.value._id)}
+								selectThis={() => U.navigateToTaskItem(item.value._id)}
 							/>
 						);
 					} else if (item.kind === "deadline") {
@@ -300,7 +289,6 @@ export function BlockChildren({
 							<DeadlineItem
 								key={"deadline-" + item.value._id}
 								item={item}
-								setSelectedTaskItem={setSelectedTaskItem}
 								specificDeadline={specificDeadline ?? false}
 							/>
 						);
@@ -310,11 +298,9 @@ export function BlockChildren({
 	);
 }
 
-export function DeadlineItem({ item, setSelectedTaskItem, specificDeadline }:
-	                             Pick<UpcomingLayoutProps, "setSelectedTaskItem"> &
-	                             { item: DeadlineBlock, specificDeadline: boolean })
+export function DeadlineItem({ item, specificDeadline }: { item: DeadlineBlock, specificDeadline: boolean })
 {
-
+	const U = useUniversalState();
 	const { ref: draggableRef } = useDraggable(({
 		type: "deadline", // only for droppable zones. This won't be used for identification.
 		id: createDragId(item.value._id, "deadline", "mainView")
@@ -326,7 +312,7 @@ export function DeadlineItem({ item, setSelectedTaskItem, specificDeadline }:
 			className={`group px-4 mb-2 flex flex-row items-center gap-5 ${item.value.isCompleted ? "line-through text-slate-400" : "text-white"}     rounded-lg cursor-pointer duration-200`}
 			onClick={(e) => {
 				e.stopPropagation();
-				setSelectedTaskItem(item.value._id);
+				U.navigateToTaskItem(item.value._id);
 			}}
 			key={item.value._id + "-deadline"}
 		>

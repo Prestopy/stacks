@@ -32,19 +32,14 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import ViewDeleteDialogContent from "@/app/Components/ViewDeleteDialogContent";
 import UpcomingLayout from "@/app/Components/UpcomingLayout";
 import {Actions} from "@/app/util/types/typeUtilities";
+import { useUniversalState } from "@/app/UseUniversalManager";
 
 
 interface BaseProps {
 	// taskFolders: Doc<"taskFolders">[];
 	// taskItems: Doc<"taskItems">[];
-	taskItems: Doc<"taskItems">[];
-	taskFolders: Doc<"taskFolders">[];
-	allProjects: Doc<"projects">[];
-
-	selectedTaskItem: Id<"taskItems"> | null;
-
-	setSelectedTaskItem: (itemId: Id<"taskItems"> | null) => void;
-	setSelectedViewId: (viewId: ViewId) => void;
+	taskItemsForView: Doc<"taskItems">[];
+	taskFoldersForView: Doc<"taskFolders">[];
 
 	taskItemActions: Actions<
 		(taskFolderId?: Id<"taskFolders"> | undefined, startDate?: Date | undefined) => void,
@@ -93,24 +88,21 @@ interface MainViewProps extends BaseProps {
 export default function MainView({
 	options,
 
-	taskItems,
-	taskFolders,
-	allProjects,
-
-	selectedTaskItem,
-	setSelectedTaskItem,
-	setSelectedViewId,
+	taskItemsForView,
+	taskFoldersForView,
 
 	taskItemActions,
 	taskFolderActions,
 }: MainViewProps) {
+	const U = useUniversalState();
+
 	return (
 		<div
 			className="flex-1 flex flex-col items-center px-4 pt-20 overflow-auto bg-slate-900"
 			style={{
 				scrollbarGutter: "stable"
 			}}
-			onClick={() => setSelectedTaskItem(null)}
+			onClick={() => U.navigateToTaskItem(null)}
 		>
 			<div className="w-[720] h-full">
 				{/*TITLE BAR*/}
@@ -148,27 +140,15 @@ export default function MainView({
 				<div className="pb-20">
 					{options.view.layout === "list" ?
 						<ListLayout
-							taskItems={taskItems}
-							taskFolders={taskFolders}
-							allProjects={allProjects}
-
-							view={options.view}
-
-							selectedTaskItem={selectedTaskItem}
-							setSelectedTaskItem={setSelectedTaskItem}
-							setSelectedViewId={setSelectedViewId}
+							taskItemsForView={taskItemsForView}
+							taskFoldersForView={taskFoldersForView}
 
 							taskItemActions={taskItemActions}
 							taskFolderActions={taskFolderActions}
 						/>
 						:
 						<UpcomingLayout
-							taskItems={taskItems}
-							allProjects={allProjects}
-
-							selectedTaskItem={selectedTaskItem}
-							setSelectedTaskItem={setSelectedTaskItem}
-
+							taskItems={taskItemsForView}
 							taskItemActions={taskItemActions}
 						/>
 					}
