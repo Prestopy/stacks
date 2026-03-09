@@ -4,6 +4,7 @@ import { Actions } from "@/app/util/types/typeUtilities";
 import TaskItemLayout from "@/app/Components/TaskItemLayout";
 import { useMemo } from "react";
 import {
+	isLate,
 	isSameDay,
 	isToday,
 	toDate,
@@ -79,7 +80,8 @@ export default function UpcomingLayout({
 					const itemDeadline = toDateOrUndefined(item.deadline);
 					if (itemDate !== undefined && !item.isCompleted) {
 						// FIXME: If the start date == deadline, only start date will show
-						if (isSameDay(itemDate, folderBlock.value.date)) {
+						// If it's today or late, or if it's the same day as the folder block
+						if ((isToday(folderBlock.value.date) && isLate(itemDate, folderBlock.value.date)) || isSameDay(itemDate, folderBlock.value.date)) {
 							return {
 								kind: "taskItem",
 								value: item,
@@ -284,7 +286,7 @@ export function BlockChildren({
 								taskItem={item.value}
 								isSelected={selectedTaskItem === item.value._id}
 								showTodayIcon
-								hideStartDateBadge
+								hideStartDateBadge={isSameDay(toDate(item.value.startDate ?? new Date()), block.value.date)}
 								thisActions={{
 									create: null,
 									modify: taskItemActions.modify.bind(null, item.value._id),

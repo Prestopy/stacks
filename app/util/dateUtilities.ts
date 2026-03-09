@@ -1,4 +1,4 @@
-import { formatRelative, startOfDay } from "date-fns";
+import { endOfDay, formatRelative, startOfDay } from "date-fns";
 import dayjs from "dayjs";
 
 type DateParam = Date | bigint;
@@ -68,14 +68,15 @@ export function toExactDate(_date: DateParam) {
 /**
  * Checks if the given date is before the reference date.
  * @param _date
- * @param ref
+ * @param _ref
  */
-export function isLate(_date: DateParam, ref: Date = today()) {
+export function isLate(_date: DateParam, _ref: DateParam = today()) {
 	const date = toDate(_date);
+	const ref = endOfDay(toDate(_ref));
 	return dayjs(date).isBefore(ref);
 }
 
-export function isLateOrToday(date: DateParam, ref: Date = today()) {
+export function isLateOrToday(date: DateParam, ref: DateParam = today()) {
 	return isLate(date, ref) || isToday(date);
 }
 
