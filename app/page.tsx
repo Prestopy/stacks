@@ -20,12 +20,13 @@ import { IconsProvider } from "tabler-dynamic-icon";
 import * as TablerIcons from "@tabler/icons-react";
 import Constants from "@/app/util/constants";
 import { Spinner } from "@/components/ui/spinner";
-import { toBigInt, toDate, toDateOrUndefined, today } from "@/app/util/dateUtilities";
+import { toBigInt, toDateOrUndefined, today } from "@/app/util/dateUtilities";
 import { TaskView, ViewId } from "@/app/util/types/baseTypes";
 import { getViewFromId, toProjectView, toUniverseView } from "@/app/util/conversionLayers";
 import { DragDropProvider } from "@dnd-kit/react";
 import { parseDragId, parseDropId } from "@/app/util/dragndrop";
 import { parseISO } from "date-fns";
+import { Draggable, Droppable } from "@dnd-kit/dom";
 
 export default function Home() {
 	// Queries
@@ -454,6 +455,57 @@ export default function Home() {
 		}
 	};
 
+	const dragDropHandler = (_source: Draggable, _target: Droppable) => {
+		const source = parseDragId(_source.id.toString());
+		const target = parseDropId(_target.id.toString());
+
+		if (source.kind === "taskItem") {
+			switch (target.kind ?? "") {
+				case "taskFolder":
+					modifyTaskItem(source.id as Id<"taskItems">, {
+						parentTaskFolder: target.id as Id<"taskFolders">,
+					});
+					break;
+				case "noTaskFolder":
+					modifyTaskItem(source.id as Id<"taskItems">, {
+						parentTaskFolder: null,
+					});
+					break;
+				case "systemFilter":
+					break;
+				case "project":
+					modifyTaskItem(source.id as Id<"taskItems">, {
+						parentProject: target.id as Id<"projects">,
+						parentTaskFolder: null,
+					});
+					break;
+				case "universe":
+					modifyTaskItem(source.id as Id<"taskItems">, {
+						parentUniverse: target.id as Id<"universes">,
+						parentProject: null,
+						parentTaskFolder: null,
+					});
+					break;
+				case "dateZone": // set start date
+					if (target.additional === null) break;
+					console.log(target);
+					modifyTaskItem(source.id as Id<"taskItems">, {
+						startDate: toBigInt(parseISO(target.additional)),
+					});
+					break;
+			}
+		} else if (source.kind === "deadline") {
+			switch (target.kind) {
+				case "dateZone": // set deadline
+					if (target.additional === null) break;
+					modifyTaskItem(source.id as Id<"taskItems">, {
+						deadline: toBigInt(parseISO(target.additional)),
+					});
+					break;
+			}
+		}
+	};
+
 	// Render
 	if (
 		allUniverses === undefined ||
@@ -468,61 +520,13 @@ export default function Home() {
 			</div>
 		);
 	}
+
 	return (
-		<DragDropProvider onDragEnd={(event) => {
+		<DragDropProvider onDragEnd={(event, manager) => {
 			if (event.canceled) return;
-
-			const {source: _source, target: _target} = event.operation;
-			if (!_source || !_target) return;
-
-			const source = parseDragId(_source.id.toString());
-			const target = parseDropId(_target.id.toString());
-
-			if (source.kind === "taskItem") {
-				switch(target.kind ?? "") {
-					case "taskFolder":
-						modifyTaskItem(source.id as Id<"taskItems">, {
-							parentTaskFolder: target.id as Id<"taskFolders">
-						});
-						break;
-					case "noTaskFolder":
-						modifyTaskItem(source.id as Id<"taskItems">, {
-							parentTaskFolder: null
-						});
-						break;
-					case "systemFilter":
-						break;
-					case "project":
-						modifyTaskItem(source.id as Id<"taskItems">, {
-							parentProject: target.id as Id<"projects">,
-							parentTaskFolder: null,
-						});
-						break;
-					case "universe":
-						modifyTaskItem(source.id as Id<"taskItems">, {
-							parentUniverse: target.id as Id<"universes">,
-							parentProject: null,
-							parentTaskFolder: null,
-						});
-						break;
-					case "dateZone": // set start date
-						if (target.additional === null) break;
-						console.log(target)
-						modifyTaskItem(source.id as Id<"taskItems">, {
-							startDate: toBigInt(parseISO(target.additional)),
-						});
-						break;
-				}
-			} else if (source.kind === "deadline") {
-				switch (target.kind) {
-					case "dateZone": // set deadline
-						if (target.additional === null) break;
-						modifyTaskItem(source.id as Id<"taskItems">, {
-							deadline: toBigInt(parseISO(target.additional)),
-						});
-						break;
-				}
-			}
+			const { source, target } = event.operation;
+			if (!source || !target) return;
+			dragDropHandler(source, target);
 		}}>
 			<IconsProvider icons={TablerIcons}>
 				{/*<DragOverlay*/}
