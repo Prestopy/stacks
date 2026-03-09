@@ -505,11 +505,20 @@ export default function Home() {
 							parentTaskFolder: null,
 						});
 						break;
-					case "startDate":
+					case "dateZone": // set start date
 						if (target.additional === null) break;
 						console.log(target)
 						modifyTaskItem(source.id as Id<"taskItems">, {
 							startDate: toBigInt(parseISO(target.additional)),
+						});
+						break;
+				}
+			} else if (source.kind === "deadline") {
+				switch (target.kind) {
+					case "dateZone": // set deadline
+						if (target.additional === null) break;
+						modifyTaskItem(source.id as Id<"taskItems">, {
+							deadline: toBigInt(parseISO(target.additional)),
 						});
 						break;
 				}

@@ -1,7 +1,7 @@
 const DND_ID_WHERE = ["sidebar", "mainView"] as const;
 
-const DRAG_ID_KIND = ["taskItem", "taskFolder", "project", "universe"] as const;
-const DROP_ID_KIND = ["taskFolder", "project", "universe", "systemFilter", "noTaskFolder", "startDate"] as const;
+const DRAG_ID_KIND = ["taskItem", "deadline", "taskFolder", "project", "universe"] as const;
+const DROP_ID_KIND = ["taskFolder", "project", "universe", "systemFilter", "noTaskFolder", "dateZone"] as const;
 
 type DndIdWhere = typeof DND_ID_WHERE[number];
 type DragIdKind = typeof DRAG_ID_KIND[number];

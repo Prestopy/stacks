@@ -16,8 +16,8 @@ import { IconPlus } from "@tabler/icons-react";
 import { addDays, differenceInCalendarDays, format } from "date-fns";
 import RichIcon from "@/app/Components/RichIcon";
 import Constants from "@/app/util/constants";
-import { useDroppable } from "@dnd-kit/react";
-import { createDropId } from "@/app/util/dragndrop";
+import { useDraggable, useDroppable } from "@dnd-kit/react";
+import { createDragId, createDropId } from "@/app/util/dragndrop";
 
 interface UpcomingLayoutProps {
 	taskItems: Doc<"taskItems">[];
@@ -199,8 +199,8 @@ export function Block({ block, selectedTaskItem, setSelectedTaskItem, taskItemAc
 	}
 ) {
 	const {isDropTarget, ref} = useDroppable({
-		id: createDropId(block.value.date.toISOString(), "startDate", "mainView", block.value.date.toISOString()),
-		accept: "taskItem",
+		id: createDropId(block.value.date.toISOString(), "dateZone", "mainView", block.value.date.toISOString()),
+		accept: ["taskItem", "deadline"],
 	});
 
 	return (
@@ -282,7 +282,7 @@ export function BlockChildren({
 					if (item.kind === "taskItem") {
 						return (
 							<TaskItemLayout
-								key={item.value._id}
+								key={"task-" + item.value._id}
 								taskItem={item.value}
 								isSelected={selectedTaskItem === item.value._id}
 								showTodayIcon
@@ -297,27 +297,48 @@ export function BlockChildren({
 						);
 					} else if (item.kind === "deadline") {
 						return (
-							<div
-								className={`group px-4 mb-2 flex flex-row items-center gap-5 ${item.value.isCompleted ? "line-through text-slate-400" : "text-white"}     rounded-lg cursor-pointer duration-200`}
-								onClick={(e) => {
-									e.stopPropagation();
-									setSelectedTaskItem(item.value._id);
-								}}
-								key={item.value._id + "-deadline"}
-							>
-								<RichIcon iconData={Constants.Icons.DEADLINE} size={16} />
-								<p className="text-sm underline-offset-2">
-									<span className="group-hover:underline">
-										{item.value.title}
-									</span>{" "}
-									<span className="pl-4 text-slate-400">
-										{specificDeadline ? format(item.value.date, "MM/dd 'at' HH:mm") : format(item.value.date, "HH:mm")}
-									</span>
-								</p>
-							</div>
+							<DeadlineItem
+								key={"deadline-" + item.value._id}
+								item={item}
+								setSelectedTaskItem={setSelectedTaskItem}
+								specificDeadline={specificDeadline ?? false}
+							/>
 						);
 					}
 				})}
 		</>
+	);
+}
+
+export function DeadlineItem({ item, setSelectedTaskItem, specificDeadline }:
+	                             Pick<UpcomingLayoutProps, "setSelectedTaskItem"> &
+	                             { item: DeadlineBlock, specificDeadline: boolean })
+{
+
+	const { ref: draggableRef } = useDraggable(({
+		type: "deadline", // only for droppable zones. This won't be used for identification.
+		id: createDragId(item.value._id, "deadline", "mainView")
+	}));
+
+	return (
+		<div
+			ref={draggableRef}
+			className={`group px-4 mb-2 flex flex-row items-center gap-5 ${item.value.isCompleted ? "line-through text-slate-400" : "text-white"}     rounded-lg cursor-pointer duration-200`}
+			onClick={(e) => {
+				e.stopPropagation();
+				setSelectedTaskItem(item.value._id);
+			}}
+			key={item.value._id + "-deadline"}
+		>
+			<RichIcon iconData={Constants.Icons.DEADLINE} size={16} />
+			<p className="text-sm underline-offset-2">
+									<span className="group-hover:underline">
+										{item.value.title}
+									</span>{" "}
+				<span className="pl-4 text-slate-400">
+										{specificDeadline ? format(item.value.date, "MM/dd 'at' HH:mm") : format(item.value.date, "HH:mm")}
+									</span>
+			</p>
+		</div>
 	);
 }
