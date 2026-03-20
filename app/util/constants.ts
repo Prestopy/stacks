@@ -116,8 +116,8 @@ export default class Constants {
 
 			iconName: Constants.Icons.EVERYTHING.name,
 			color: Constants.Colors.EVERYTHING_GREEN,
-			title: "Everything",
-			description: "Every task that is currently incomplete.",
+			title: "Anytime",
+			description: "Every task that is currently incomplete and not listed as begin someday.",
 
 			layout: "list",
 		},

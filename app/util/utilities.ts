@@ -32,7 +32,7 @@ export function filterTaskItems(taskItems: Doc<"taskItems">[], view: TaskView) {
 				);
 			}
 			case "everything":
-				return filteredTodos.filter((todo) => !todo.isCompleted);
+				return filteredTodos.filter((todo) => !todo.isCompleted && !todo.isSomeday);
 			case "flagged":
 				return filteredTodos.filter(
 					(todo) => !todo.isCompleted && todo.isFlagged,
