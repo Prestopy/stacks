@@ -53,14 +53,29 @@ export default function Home() {
 	const [selectedViewId, setSelectedViewId] = useState<ViewId>(Constants.FilterViews.INBOX.id);
 	const [selectedTaskItem, setSelectedTaskItem] = useState<Id<"taskItems"> | null>(null);
 
+	// FIXME: check if in current view
+	// if not, navigate to the view with it
 	const navigateToTaskItem = (taskItemId: Id<"taskItems"> | null) => {
 		setSelectedTaskItem(taskItemId);
 
-		if (taskItemId === null || selectedView.kind === "systemFilter") return;
-
+		if (taskItemId === null) return;
 		const taskItem = withTaskItem(taskItemId);
 		if (!taskItem) return;
 
+		// Special case: if the current view is scheduled (and it only has a deadline in there)
+		if (selectedView.kind === "systemFilter" && selectedView.id === "schedule") {
+			// Since the start date must be before the deadline,
+			// if there is a deadline and a start date, the task must be listed as an item
+			// (at the very least as late in the today section)
+
+			// If it is listed as more than just a deadline block, ignore
+			if (taskItem.deadline && taskItem.startDate) return;
+		} else {
+			// If the task item is in the current view, ignore
+			if (taskItemsForView.some(ti => ti._id.toString() === taskItemId.toString())) return;
+		}
+
+		// If the task item isn't in the current view, navigate to that view
 		if (taskItem.parentProject) {
 			setSelectedViewId(taskItem.parentProject);
 		} else if (taskItem.parentUniverse) {
