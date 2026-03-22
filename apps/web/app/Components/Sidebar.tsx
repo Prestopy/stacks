@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { IconPlus, IconTrash } from "@tabler/icons-react";
+import {IconLayoutSidebarLeftCollapse, IconLayoutSidebarLeftExpand, IconPlus, IconTrash} from "@tabler/icons-react";
 import { TaskView, ViewId } from "@/app/util/types/baseTypes";
 import { Actions } from "@/app/util/types/typeUtilities";
 import ViewDeleteDialogContent from "@/app/Components/ViewDeleteDialogContent";
@@ -56,6 +56,8 @@ interface SidebarProps {
 	systemSections: Section[];
 	userSections: Section[];
 
+	setShowSidebar: (show: boolean) => void;
+
 	universeActions: Actions<
 		(title?: string, desc?: string) => void,
 		null,
@@ -71,6 +73,8 @@ interface SidebarProps {
 export default function Sidebar({
 	systemSections,
 	userSections,
+
+	setShowSidebar,
 
 	universeActions,
 	projectActions,
@@ -92,7 +96,18 @@ export default function Sidebar({
 	}
 
 	return (
-		<div className="relative w-96 h-screen pt-8 bg-slate-800 border-r border-r-slate-700 select-none">
+		<div className="relative w-96 h-screen bg-slate-800 border-r border-r-slate-700 select-none">
+			<div className="flex items-center justify-between">
+				{/*HEAD*/}
+				<div></div>
+				<button
+					className="p-1 m-1 text-slate-400 hover:bg-slate-700 rounded transition-colors duration-200"
+					onClick={() => setShowSidebar(false)}
+				>
+					<IconLayoutSidebarLeftCollapse />
+				</button>
+			</div>
+
 			<div className="p-4">
 				<SectionList
 					sections={systemSections}

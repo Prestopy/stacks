@@ -28,6 +28,7 @@ import { parseDragId, parseDropId } from "@/app/util/dragndrop";
 import { parseISO } from "date-fns";
 import { Draggable, Droppable } from "@dnd-kit/dom";
 import { UniversalContext } from "@/app/TheUniverseManager";
+import {IconLayoutSidebarLeftCollapse, IconLayoutSidebarLeftExpand} from "@tabler/icons-react";
 
 export default function Home() {
 	// Queries
@@ -329,10 +330,7 @@ export default function Home() {
 			console.error("Failed to create task in stack:", e);
 		}
 	};
-	const modifyTaskItem = async (
-		taskId: Id<"taskItems">,
-		modifications: TaskItemModifications,
-	) => {
+	const modifyTaskItem = async (taskId: Id<"taskItems">, modifications: TaskItemModifications) => {
 		try {
 			await updateTaskItem({
 				_taskId: taskId,
@@ -369,10 +367,7 @@ export default function Home() {
 			console.error("Failed to create task folder in stack:", e);
 		}
 	};
-	const modifyTaskFolder = async (
-		taskFolderId: Id<"taskFolders">,
-		modifications: TaskFolderModifications,
-	) => {
+	const modifyTaskFolder = async (taskFolderId: Id<"taskFolders">, modifications: TaskFolderModifications) => {
 		try {
 			await updateTaskFolder({
 				_taskFolderId: taskFolderId,
@@ -409,10 +404,7 @@ export default function Home() {
 			console.error("Failed to create universe:", e);
 		}
 	};
-	const modifyUniverse = async (
-		universeId: Id<"universes">,
-		modifications: UniverseModifications,
-	) => {
+	const modifyUniverse = async (universeId: Id<"universes">, modifications: UniverseModifications) => {
 		try {
 			await updateUniverse({
 				_universeId: universeId,
@@ -463,10 +455,7 @@ export default function Home() {
 			console.error("Failed to create project:", e);
 		}
 	};
-	const modifyProject = async (
-		projectId: Id<"projects">,
-		modifications: ProjectModifications,
-	) => {
+	const modifyProject = async (projectId: Id<"projects">, modifications: ProjectModifications) => {
 		try {
 			await updateProject({
 				_projectId: projectId,
@@ -539,6 +528,9 @@ export default function Home() {
 		}
 	};
 
+	// UI State
+	const [showSidebar, setShowSidebar] = useState(true);
+
 	// Render
 	if (
 		allUniverses === undefined ||
@@ -580,59 +572,49 @@ export default function Home() {
 				dragDropHandler(source, target);
 			}}>
 				<IconsProvider icons={TablerIcons}>
-					{/*<DragOverlay*/}
-					{/*	tag="div"*/}
-					{/*	className="px-4 py-2 bg-slate-800 rounded-lg cursor-grabbing border border-slate-700 shadow-2xl"*/}
-					{/*	dropAnimation={null}*/}
-					{/*>*/}
-					{/*	{(source) => {*/}
-					{/*		// 1. Check if source exists*/}
-					{/*		if (!source) return null;*/}
-
-					{/*		// 2. Access data safely.*/}
-					{/*		// dnd-kit/react puts your custom data in source.data*/}
-					{/*		const id = source.id;*/}
-					{/*		const type = source.type*/}
-
-					{/*		if (type === "taskItem") {*/}
-					{/*			const item = withTaskItem(id as Id<"taskItems">);*/}
-					{/*			if (!item) return;*/}
-
-					{/*			return (*/}
-					{/*				<>{item.title || "Untitled Task"}</>*/}
-					{/*			);*/}
-					{/*		}*/}
-
-					{/*		return null;*/}
-					{/*	}}*/}
-					{/*</DragOverlay>*/}
-
 					<div className="w-screen h-screen">
 						<div className="flex flex-row gap-0">
-							<Sidebar
-								systemSections={[
-									{ kind: "data", view: Constants.FilterViews.INBOX },
-									{ kind: "spacer" },
-									{ kind: "data", view: Constants.FilterViews.TODAY },
-									{ kind: "data", view: Constants.FilterViews.SCHEDULE, },
-									{ kind: "data", view: Constants.FilterViews.EVERYTHING },
-									{ kind: "data", view: Constants.FilterViews.FLAGGED, },
-									{ kind: "data", view: Constants.FilterViews.SOMEDAY, },
-									{ kind: "spacer" },
-									{ kind: "data", view: Constants.FilterViews.COMPLETED, },
-								]}
-								userSections={viewHierarchy}
-								universeActions={{
-									create: createUniverse,
-									modify: null,
-									delete: deleteUniverse,
-								}}
-								projectActions={{
-									create: createProject,
-									modify: null,
-									delete: deleteProject,
-								}}
-							/>
+							{
+								showSidebar && (
+									<div className="relative">
+										<Sidebar
+											systemSections={[
+												{ kind: "data", view: Constants.FilterViews.INBOX },
+												{ kind: "spacer" },
+												{ kind: "data", view: Constants.FilterViews.TODAY },
+												{ kind: "data", view: Constants.FilterViews.SCHEDULE, },
+												{ kind: "data", view: Constants.FilterViews.EVERYTHING },
+												{ kind: "data", view: Constants.FilterViews.FLAGGED, },
+												{ kind: "data", view: Constants.FilterViews.SOMEDAY, },
+												{ kind: "spacer" },
+												{ kind: "data", view: Constants.FilterViews.COMPLETED, },
+											]}
+											userSections={viewHierarchy}
+											setShowSidebar={setShowSidebar}
+											universeActions={{
+												create: createUniverse,
+												modify: null,
+												delete: deleteUniverse,
+											}}
+											projectActions={{
+												create: createProject,
+												modify: null,
+												delete: deleteProject,
+											}}
+										/>
+									</div>
+								)
+							}
+							{
+								!showSidebar && (
+									<button
+										className="absolute top-0 left-0 p-1 m-1 text-slate-400 hover:bg-slate-700 rounded transition-colors duration-200"
+										onClick={() => setShowSidebar(true)}
+									>
+										<IconLayoutSidebarLeftExpand />
+									</button>
+								)
+							}
 
 							{taskItemsForView !== undefined && taskFoldersForView !== undefined ?
 								<div className="flex flex-col w-full h-screen">
