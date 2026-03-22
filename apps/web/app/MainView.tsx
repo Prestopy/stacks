@@ -104,7 +104,7 @@ export default function MainView({
 			}}
 			onClick={() => U.navigateToTaskItem(null)}
 		>
-			<div className="w-[720] h-full">
+			<div className="max-w-[720] lg:w-[720] h-full">
 				{/*TITLE BAR*/}
 				<TitleBar options={options} />
 

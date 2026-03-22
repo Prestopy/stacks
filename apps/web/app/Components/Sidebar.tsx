@@ -22,6 +22,7 @@ import ViewDeleteDialogContent from "@/app/Components/ViewDeleteDialogContent";
 import { useDroppable } from "@dnd-kit/react";
 import { createDropId } from "@/app/util/dragndrop";
 import { useUniversalState } from "@/app/UseUniversalManager";
+import {ResizableHandle, ResizablePanel} from "@/components/ui/resizable";
 
 type Section = Divider | Spacer | Data;
 
@@ -56,7 +57,7 @@ interface SidebarProps {
 	systemSections: Section[];
 	userSections: Section[];
 
-	setShowSidebar: (show: boolean) => void;
+	hideSidebar: () => void;
 
 	universeActions: Actions<
 		(title?: string, desc?: string) => void,
@@ -74,7 +75,7 @@ export default function Sidebar({
 	systemSections,
 	userSections,
 
-	setShowSidebar,
+	hideSidebar,
 
 	universeActions,
 	projectActions,
@@ -96,80 +97,82 @@ export default function Sidebar({
 	}
 
 	return (
-		<div className="relative w-96 h-screen bg-slate-800 border-r border-r-slate-700 select-none">
-			<div className="flex items-center justify-between">
-				{/*HEAD*/}
-				<div></div>
-				<button
-					className="p-1 m-1 text-slate-400 hover:bg-slate-700 rounded transition-colors duration-200"
-					onClick={() => setShowSidebar(false)}
-				>
-					<IconLayoutSidebarLeftCollapse />
-				</button>
-			</div>
-
-			<div className="p-4">
-				<SectionList
-					sections={systemSections}
-				/>
-
-				<div className="relative flex flex-row justify-between items-center group">
-					<div className="w-full">
-						<hr className="my-3 border-slate-700" />
-					</div>
+		<div className="flex flex-row gap-0 w-full">
+			<div className="relative w-full h-screen bg-slate-800 border-r border-r-slate-700 select-none">
+				<div className="flex items-center justify-between">
+					{/*HEAD*/}
+					<div></div>
+					<button
+						className="p-1 m-1 text-slate-400 hover:bg-slate-700 rounded transition-colors duration-200"
+						onClick={hideSidebar}
+					>
+						<IconLayoutSidebarLeftCollapse />
+					</button>
 				</div>
 
-				<SectionList
-					sections={userSectionsWithSpacing}
-					universeActions={{
-						create: null,
-						modify: null,
-						delete: universeActions.delete,
-					}}
-					projectActions={projectActions}
-				/>
-			</div>
+				<div className="p-4">
+					<SectionList
+						sections={systemSections}
+					/>
 
-			<div className="absolute bottom-0 w-full h-12 px-4 bg-slate-800 border-t border-slate-700 flex flex-row justify-between items-center gap-10">
-				<Dialog>
-					<DialogTrigger asChild>
-						<button className="flex flex-row gap-2 items-center text-sm text-slate-400 hover:text-white duration-100 right-0">
-							<IconPlus size={18} />
-							<p>New universe</p>
-						</button>
-					</DialogTrigger>
-					<DialogContent>
-						<DialogHeader>
-							<DialogTitle>Create a universe</DialogTitle>
-							<DialogDescription>
-								Create a universe to organize your tasks in.
-							</DialogDescription>
-						</DialogHeader>
+					<div className="relative flex flex-row justify-between items-center group">
+						<div className="w-full">
+							<hr className="my-3 border-slate-700" />
+						</div>
+					</div>
 
-						<Label>Title</Label>
-						<Input
-							onChange={(e) => {
-								setUniverseTitle(e.target.value);
-							}}
-							id="title-1"
-							name="title"
-							placeholder="Personal, Work, etc."
-						/>
+					<SectionList
+						sections={userSectionsWithSpacing}
+						universeActions={{
+							create: null,
+							modify: null,
+							delete: universeActions.delete,
+						}}
+						projectActions={projectActions}
+					/>
+				</div>
 
-						<DialogFooter>
-							<DialogClose asChild>
-								<Button variant="outline" onClick={handleCancel}>
-									Cancel
-								</Button>
-							</DialogClose>
-							<DialogClose asChild>
-								<Button onClick={() => universeActions.create(universeTitle)}>
-									Create universe
-								</Button>
-							</DialogClose>
-						</DialogFooter>
-					</DialogContent>
-				</Dialog>
+				<div className="absolute bottom-0 w-full h-12 px-4 bg-slate-800 border-t border-slate-700 flex flex-row justify-between items-center gap-10">
+					<Dialog>
+						<DialogTrigger asChild>
+							<button className="flex flex-row gap-2 items-center text-sm text-slate-400 hover:text-white duration-100 right-0">
+								<IconPlus size={18} />
+								<p>New universe</p>
+							</button>
+						</DialogTrigger>
+						<DialogContent>
+							<DialogHeader>
+								<DialogTitle>Create a universe</DialogTitle>
+								<DialogDescription>
+									Create a universe to organize your tasks in.
+								</DialogDescription>
+							</DialogHeader>
+
+							<Label>Title</Label>
+							<Input
+								onChange={(e) => {
+									setUniverseTitle(e.target.value);
+								}}
+								id="title-1"
+								name="title"
+								placeholder="Personal, Work, etc."
+							/>
+
+							<DialogFooter>
+								<DialogClose asChild>
+									<Button variant="outline" onClick={handleCancel}>
+										Cancel
+									</Button>
+								</DialogClose>
+								<DialogClose asChild>
+									<Button onClick={() => universeActions.create(universeTitle)}>
+										Create universe
+									</Button>
+								</DialogClose>
+							</DialogFooter>
+						</DialogContent>
+					</Dialog>
+				</div>
 			</div>
 		</div>
 	);
