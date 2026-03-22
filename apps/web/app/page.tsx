@@ -2,7 +2,7 @@
 
 import Sidebar from "@/app/Components/Sidebar";
 import MainView from "@/app/MainView";
-import {useEffect, useMemo, useRef, useState} from "react";
+import {ReactNode, Ref, useEffect, useMemo, useRef, useState} from "react";
 import {
 	ProjectModifications,
 	TaskFolderModifications,
@@ -28,11 +28,13 @@ import { parseDragId, parseDropId } from "@/app/util/dragndrop";
 import { parseISO } from "date-fns";
 import { Draggable, Droppable } from "@dnd-kit/dom";
 import { UniversalContext } from "@/app/TheUniverseManager";
-import {IconLayoutSidebarLeftCollapse, IconLayoutSidebarLeftExpand} from "@tabler/icons-react";
-import {ResizableHandle, ResizablePanel, ResizablePanelGroup} from "@/components/ui/resizable";
-import {usePanelRef} from "react-resizable-panels";
+import {PanelImperativeHandle, usePanelRef} from "react-resizable-panels";
+import {useIsMobile} from "@/app/useIsMobile";
+import ConsiderDevice from "@/app/ConsiderDevice";
 
 export default function Home() {
+	const isMobile = useIsMobile();
+
 	// Queries
 	const allUniverses = useQuery(api.universes.get);
 	const allProjects = useQuery(api.projects.get);
@@ -532,9 +534,14 @@ export default function Home() {
 
 	// UI State
 	const sidebarPanelRef = usePanelRef();
-	const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+	const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+	const showSidebar = () => {
+		setSidebarCollapsed(false);
+		sidebarPanelRef?.current?.expand();
+	}
 	const hideSidebar = () => {
+		setSidebarCollapsed(true);
 		sidebarPanelRef.current?.collapse();
 	}
 
@@ -580,17 +587,13 @@ export default function Home() {
 			}}>
 				<IconsProvider icons={TablerIcons}>
 					<div className="w-screen h-screen">
-						<ResizablePanelGroup orientation="horizontal">
-							<ResizablePanel
-								collapsible
-								panelRef={sidebarPanelRef}
-								onResize={(e) => {
-									setSidebarCollapsed(e.inPixels === 0);
-								}}
-								minSize={250}
-								maxSize={400}
-								defaultSize="25%"
-							>
+						<ConsiderDevice
+							isMobile={isMobile}
+							sidebarPanelRef={sidebarPanelRef}
+							showSidebar={showSidebar}
+							sidebarCollapsed={sidebarCollapsed}
+							setSidebarCollapsed={setSidebarCollapsed}
+							sidebar={
 								<Sidebar
 									systemSections={[
 										{ kind: "data", view: Constants.FilterViews.INBOX },
@@ -605,6 +608,7 @@ export default function Home() {
 									]}
 									userSections={viewHierarchy}
 									hideSidebar={hideSidebar}
+									hideSidebarOnSelect={isMobile}
 									universeActions={{
 										create: createUniverse,
 										modify: null,
@@ -616,109 +620,96 @@ export default function Home() {
 										delete: deleteProject,
 									}}
 								/>
-							</ResizablePanel>
-							<ResizableHandle withHandle />
-							{
-								sidebarCollapsed && (
-									<button
-										className="absolute top-0 left-0 p-1 m-1 text-slate-400 hover:bg-slate-700 rounded transition-colors duration-200"
-										onClick={() => sidebarPanelRef.current?.expand()}
-									>
-										<IconLayoutSidebarLeftExpand />
-									</button>
-								)
 							}
-
-							<ResizablePanel defaultSize="75%">
-								{taskItemsForView !== undefined && taskFoldersForView !== undefined ?
-									<div className="flex flex-col w-full h-screen">
-										<div className="flex-1 flex overflow-auto">
-											<MainView
-												options={
-													selectedView.kind === "systemFilter" ?
-														{
-															kind: "systemFilter",
-															view: selectedView,
-														}
-													: selectedView.kind === "universe" ?
-														{
-															kind: "universe",
-															view: selectedView,
-															thisActions: {
-																create: null,
-																modify: (mods: UniverseModifications) => modifyUniverse(selectedView.id, mods),
-																delete: () => deleteUniverse(selectedView.id)
-															},
-														}
-													:	{
-															kind: "project",
-															view: selectedView,
-															deadline: toDateOrUndefined(
-																withProject(selectedView.id)?.deadline,
-															),
-															thisActions: {
-																create: null,
-																modify: (mods: ProjectModifications) => modifyProject(selectedView.id, mods),
-																delete: () => deleteProject(selectedView.id),
-															}
-														}
-
-												}
-
-												taskItemsForView={taskItemsForView}
-												taskFoldersForView={taskFoldersForView}
-
-												taskItemActions={{
-													create: (taskFolderId?: Id<"taskFolders"> | undefined, startDate?: Date | undefined) => createTaskItem(selectedView, taskFolderId, startDate),
-													modify: modifyTaskItem,
-													delete: null,
-												}}
-												taskFolderActions={{
-													create: null,
-													modify: modifyTaskFolder,
-													delete: deleteTaskFolder,
-												}}
-											/>
-										</div>
-										<div className="shrink-0">
-											<Actionbar
-												universes={allUniverses}
-												projects={allProjects}
-												taskFolders={taskFoldersForView}
-												isFilterView={selectedView.kind === "systemFilter"}
-												isTaskItemSelected={selectedTaskItem !== null}
-
-												taskItemActions={{
-													create: () => createTaskItem(selectedView),
-													modify: null,
-													delete: null
-												}}
-												taskFolderActions={{
-													create: () => createTaskFolder(selectedView),
-													modify: null,
-													delete: null
-												}}
-												selectedTaskItemActions={{
-													create: null,
-													modify: (mods: TaskItemModifications) => {
-														if (selectedTaskItem !== null)
-															return modifyTaskItem(selectedTaskItem, mods);
-														return Promise.reject();
-													},
-													delete: () => {
-														if (selectedTaskItem !== null) {
-															setSelectedTaskItem(null);
-															return deleteTaskItem(selectedTaskItem);
-														}
-														return Promise.reject();
+						>
+							{taskItemsForView !== undefined && taskFoldersForView !== undefined ?
+								<div className="flex flex-col w-full h-screen">
+									<div className="flex-1 flex overflow-auto">
+										<MainView
+											options={
+												selectedView.kind === "systemFilter" ?
+													{
+														kind: "systemFilter",
+														view: selectedView,
 													}
-												}}
-											/>
-										</div>
+												: selectedView.kind === "universe" ?
+													{
+														kind: "universe",
+														view: selectedView,
+														thisActions: {
+															create: null,
+															modify: (mods: UniverseModifications) => modifyUniverse(selectedView.id, mods),
+															delete: () => deleteUniverse(selectedView.id)
+														},
+													}
+												:	{
+														kind: "project",
+														view: selectedView,
+														deadline: toDateOrUndefined(
+															withProject(selectedView.id)?.deadline,
+														),
+														thisActions: {
+															create: null,
+															modify: (mods: ProjectModifications) => modifyProject(selectedView.id, mods),
+															delete: () => deleteProject(selectedView.id),
+														}
+													}
+
+											}
+
+											taskItemsForView={taskItemsForView}
+											taskFoldersForView={taskFoldersForView}
+
+											taskItemActions={{
+												create: (taskFolderId?: Id<"taskFolders"> | undefined, startDate?: Date | undefined) => createTaskItem(selectedView, taskFolderId, startDate),
+												modify: modifyTaskItem,
+												delete: null,
+											}}
+											taskFolderActions={{
+												create: null,
+												modify: modifyTaskFolder,
+												delete: deleteTaskFolder,
+											}}
+										/>
 									</div>
-								:	<div className="flex-1 bg-slate-900" />}
-							</ResizablePanel>
-						</ResizablePanelGroup>
+									<div className="shrink-0">
+										<Actionbar
+											universes={allUniverses}
+											projects={allProjects}
+											taskFolders={taskFoldersForView}
+											isFilterView={selectedView.kind === "systemFilter"}
+											isTaskItemSelected={selectedTaskItem !== null}
+
+											taskItemActions={{
+												create: () => createTaskItem(selectedView),
+												modify: null,
+												delete: null
+											}}
+											taskFolderActions={{
+												create: () => createTaskFolder(selectedView),
+												modify: null,
+												delete: null
+											}}
+											selectedTaskItemActions={{
+												create: null,
+												modify: (mods: TaskItemModifications) => {
+													if (selectedTaskItem !== null)
+														return modifyTaskItem(selectedTaskItem, mods);
+													return Promise.reject();
+												},
+												delete: () => {
+													if (selectedTaskItem !== null) {
+														setSelectedTaskItem(null);
+														return deleteTaskItem(selectedTaskItem);
+													}
+													return Promise.reject();
+												}
+											}}
+										/>
+									</div>
+								</div>
+							:	<div className="flex-1 bg-slate-900" />}
+						</ConsiderDevice>
 					</div>
 				</IconsProvider>
 			</DragDropProvider>

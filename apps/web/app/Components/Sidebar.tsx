@@ -58,6 +58,7 @@ interface SidebarProps {
 	userSections: Section[];
 
 	hideSidebar: () => void;
+	hideSidebarOnSelect: boolean;
 
 	universeActions: Actions<
 		(title?: string, desc?: string) => void,
@@ -76,6 +77,7 @@ export default function Sidebar({
 	userSections,
 
 	hideSidebar,
+    hideSidebarOnSelect,
 
 	universeActions,
 	projectActions,
@@ -113,6 +115,7 @@ export default function Sidebar({
 				<div className="p-4">
 					<SectionList
 						sections={systemSections}
+						onButtonClick={hideSidebarOnSelect ? hideSidebar : () => {}}
 					/>
 
 					<div className="relative flex flex-row justify-between items-center group">
@@ -123,6 +126,7 @@ export default function Sidebar({
 
 					<SectionList
 						sections={userSectionsWithSpacing}
+						onButtonClick={hideSidebarOnSelect ? hideSidebar : () => {}}
 						universeActions={{
 							create: null,
 							modify: null,
@@ -183,6 +187,8 @@ interface SidebarButtonProps {
 	isChild?: boolean;
 	isSelected: boolean;
 
+	onClick: () => void,
+
 	createChildItem?: (projectTitle?: string) => void;
 	deleteThis?: () => void;
 }
@@ -191,6 +197,7 @@ function SidebarButton({
 	view,
 	isChild,
 	isSelected,
+	onClick,
 	createChildItem,
 	deleteThis,
 }: SidebarButtonProps) {
@@ -212,14 +219,17 @@ function SidebarButton({
 		<button
 			ref={ref}
 			className={
-				`group flex flex-row justify-between items-center px-4 py-1 w-full ${
+				`group flex flex-row justify-between items-center px-4 py-2 md:py-1 w-full ${
 					!isChild ? "font-bold text-slate-300"
 					: !isSelected ? "text-slate-400"
 					: "text-slate-300"
 				} text-left ${isSelected ? "bg-white/5" : ""} hover:bg-white/5 duration-100 rounded-lg flex items-center gap-2 ` +
 				(isDropTarget ? "!bg-green-500/20" : "")
 			}
-			onClick={() => U.navigateToView(view.id)}
+			onClick={() => {
+				U.navigateToView(view.id);
+				onClick();
+			}}
 		>
 			<div className="flex flex-row items-center gap-2 leading-tight">
 				<span className="inline-block">
@@ -305,6 +315,8 @@ function SidebarButton({
 interface BlockListProps {
 	sections: Section[];
 
+	onButtonClick: () => void,
+
 	projectActions?: Actions<
 		(universeId: Id<"universes">, title?: string, desc?: string) => void,
 		null,
@@ -315,6 +327,7 @@ interface BlockListProps {
 
 function SectionList({
 	sections,
+	onButtonClick,
 	projectActions,
 	universeActions,
 }: BlockListProps) {
@@ -332,6 +345,8 @@ function SectionList({
 				<SidebarButton
 					view={universeOrFilterBlock.view}
 					isSelected={U.selectedViewId === universeOrFilterBlock.view.id}
+
+					onClick={onButtonClick}
 
 					createChildItem={
 						projectActions ?
@@ -361,6 +376,8 @@ function SectionList({
 								isChild
 								view={projectBlock.view}
 								isSelected={U.selectedViewId === projectBlock.view.id}
+
+								onClick={onButtonClick}
 
 								deleteThis={
 									projectActions ?
