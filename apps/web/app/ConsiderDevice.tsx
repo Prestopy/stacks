@@ -38,6 +38,9 @@ export default function ConsiderDevice(
 		return (
 			<ResizablePanelGroup orientation="horizontal">
 				<ResizablePanel
+					style={{
+						overflow: "hidden",
+					}}
 					collapsible
 					panelRef={sidebarPanelRef}
 					onResize={(e) => {

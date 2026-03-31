@@ -274,7 +274,7 @@ export function BlockChildren({
 								key={"task-" + item.value._id}
 								taskItem={item.value}
 								isSelected={U.selectedTaskItemId === item.value._id}
-								showTodayIcon
+								showParent
 								hideStartDateBadge={isSameDay(toDate(item.value.startDate ?? new Date()), block.value.date)}
 								thisActions={{
 									create: null,

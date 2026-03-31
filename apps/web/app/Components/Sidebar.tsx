@@ -101,39 +101,41 @@ export default function Sidebar({
 	return (
 		<div className="flex flex-row gap-0 w-full">
 			<div className="relative w-full h-screen bg-slate-800 border-r border-r-slate-700 select-none">
-				<div className="flex items-center justify-between">
-					{/*HEAD*/}
-					<div></div>
-					<button
-						className="p-1 m-1 text-slate-400 hover:bg-slate-700 rounded transition-colors duration-200"
-						onClick={hideSidebar}
-					>
-						<IconLayoutSidebarLeftCollapse />
-					</button>
-				</div>
-
-				<div className="p-4">
-					<SectionList
-						sections={systemSections}
-						onButtonClick={hideSidebarOnSelect ? hideSidebar : () => {}}
-					/>
-
-					<div className="relative flex flex-row justify-between items-center group">
-						<div className="w-full">
-							<hr className="my-3 border-slate-700" />
-						</div>
+				<div className="overflow-auto h-full" style={{ scrollbarGutter: "stable" }}>
+					<div className="flex items-center justify-between">
+						{/*HEAD*/}
+						<div></div>
+						<button
+							className="p-1 m-1 text-slate-400 hover:bg-slate-700 rounded transition-colors duration-200"
+							onClick={hideSidebar}
+						>
+							<IconLayoutSidebarLeftCollapse />
+						</button>
 					</div>
 
-					<SectionList
-						sections={userSectionsWithSpacing}
-						onButtonClick={hideSidebarOnSelect ? hideSidebar : () => {}}
-						universeActions={{
-							create: null,
-							modify: null,
-							delete: universeActions.delete,
-						}}
-						projectActions={projectActions}
-					/>
+					<div className="p-4">
+						<SectionList
+							sections={systemSections}
+							onButtonClick={hideSidebarOnSelect ? hideSidebar : () => {}}
+						/>
+
+						<div className="relative flex flex-row justify-between items-center group">
+							<div className="w-full">
+								<hr className="my-3 border-slate-700" />
+							</div>
+						</div>
+
+						<SectionList
+							sections={userSectionsWithSpacing}
+							onButtonClick={hideSidebarOnSelect ? hideSidebar : () => {}}
+							universeActions={{
+								create: null,
+								modify: null,
+								delete: universeActions.delete,
+							}}
+							projectActions={projectActions}
+						/>
+					</div>
 				</div>
 
 				<div className="absolute bottom-0 w-full h-12 px-4 bg-slate-800 border-t border-slate-700 flex flex-row justify-between items-center gap-10">

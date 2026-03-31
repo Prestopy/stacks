@@ -196,6 +196,7 @@ function BlockRenderer({
 					<TaskItemLayout
 						taskItem={block.value}
 						isSelected={U.selectedTaskItemId === block.value._id}
+						showParent={U.getView(U.selectedViewId)?.kind === "systemFilter"}
 						showTodayIcon={U.getView(U.selectedViewId)?.kind !== "systemFilter" || U.getView(U.selectedViewId)?.id !== "today"}
 						thisActions={{
 							create: null,

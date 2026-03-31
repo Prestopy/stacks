@@ -4,7 +4,7 @@ const MOBILE_BREAKPOINT = 640; // Tailwind's sm breakpoint
 
 export function useIsMobile() {
 	const [isMobile, setIsMobile] = useState(
-		true
+		false
 	);
 
 	useEffect(() => {

@@ -26,11 +26,13 @@ import { DateOrSomeday } from "@/app/util/types/baseTypes";
 import { Actions } from "@/app/util/types/typeUtilities";
 import { useDraggable } from "@dnd-kit/react";
 import { createDragId } from "@/app/util/dragndrop";
+import {useUniversalState} from "@/app/UseUniversalManager";
 
 interface TaskItemLayoutProps {
 	taskItem: Doc<"taskItems">;
 	isSelected: boolean;
 
+	showParent?: boolean;
 	showTodayIcon?: boolean;
 	hideStartDateBadge?: boolean;
 
@@ -44,12 +46,15 @@ interface TaskItemLayoutProps {
 
 export default function TaskItemLayout({
 	showTodayIcon,
+	showParent,
 	hideStartDateBadge,
 	taskItem,
 	thisActions,
 	isSelected,
 	selectThis,
 }: TaskItemLayoutProps) {
+	const U = useUniversalState();
+
 	const { ref: draggableRef } = useDraggable(({
 		type: "taskItem", // only for droppable zones. This won't be used for identification.
 		id: createDragId(taskItem._id, "taskItem", "mainView")
@@ -127,64 +132,71 @@ export default function TaskItemLayout({
 
 			<div className="flex flex-col flex-1 w-full task-select-zone">
 				{!isSelected ?
-					<div className="flex flex-row justify-between">
-						<h2 className="text-lg">
-							{!hideStartDateBadge && taskItem.startDate && !isToday(taskItem.startDate) ?
-								<span
-									className={`inline-flex align-middle mr-2 px-2 py-0.5
+					<div className="flex flex-col">
+						<div className="flex flex-row justify-between">
+							<h2 className="text-lg">
+								{!hideStartDateBadge && taskItem.startDate && !isToday(taskItem.startDate) ?
+									<span
+										className={`inline-flex align-middle mr-2 px-2 py-0.5
 											${
-												!isLate(taskItem.startDate) ?
-													"bg-slate-700 text-slate-300"
+											!isLate(taskItem.startDate) ?
+												"bg-slate-700 text-slate-300"
 												:	"bg-red-500 text-white"
-											} text-sm rounded-md
+										} text-sm rounded-md
 										`}
-								>
+									>
 									<p>
 										{capitalize(
 											formatDateAsRelative(taskItem.startDate, new Date()),
 										)}
 									</p>
 								</span>
-							: taskItem.startDate && isToday(taskItem.startDate) && showTodayIcon ?
-								<span className="inline-flex align-middle mr-2 leading-[1em] h-[1em]">
+									: taskItem.startDate && isToday(taskItem.startDate) && showTodayIcon ?
+										<span className="inline-flex align-middle mr-2 leading-[1em] h-[1em]">
 									<RichIcon iconData={Constants.Icons.TODAY} size={16} />
 								</span>
-							:	null}
+										:	null}
 
-							<span className={tempTextFields.title.length <= 0 ? "text-slate-400 italic" : ""}>
+								<span className={tempTextFields.title.length <= 0 ? "text-slate-400 italic" : ""}>
 								{tempTextFields.title.length <= 0 ? "Title..." : tempTextFields.title}
 							</span>
 
-							{(taskItem.note?.length ?? 0) > 0 && (
-								<span className="inline-flex align-middle ml-2 leading-[1em] h-[1em] text-slate-400">
+								{(taskItem.note?.length ?? 0) > 0 && (
+									<span className="inline-flex align-middle ml-2 leading-[1em] h-[1em] text-slate-400">
 									<IconFileDescription size={16} />
 								</span>
-							)}
-						</h2>
+								)}
+							</h2>
 
-						{taskItem.deadline && (
-							<div className="px-2 shrink-0 flex items-center justify-between text-sm select-none">
-								<LabelWithIcon
-									iconData={Constants.Icons.DEADLINE}
-									size={16}
-									className={
-										!isLateOrToday(taskItem.deadline) ? "text-slate-400" : (
-											`text-red-500`
-										)
-									}
-								>
-									<p className="text-sm">
-										{capitalize(
-											getDifferenceInDaysAsString(
-												taskItem.deadline,
-												new Date(),
-											),
-										)}
-									</p>
-								</LabelWithIcon>
-							</div>
-						)}
-						{/*<p className="text-sm text-slate-400">{tempTextFields.note}</p>*/}
+							{taskItem.deadline && (
+								<div className="px-2 shrink-0 flex items-center justify-between text-sm select-none">
+									<LabelWithIcon
+										iconData={Constants.Icons.DEADLINE}
+										size={16}
+										className={
+											!isLateOrToday(taskItem.deadline) ? "text-slate-400" : (
+												`text-red-500`
+											)
+										}
+									>
+										<p className="text-sm">
+											{capitalize(
+												getDifferenceInDaysAsString(
+													taskItem.deadline,
+													new Date(),
+												),
+											)}
+										</p>
+									</LabelWithIcon>
+								</div>
+							)}
+							{/*<p className="text-sm text-slate-400">{tempTextFields.note}</p>*/}
+						</div>
+						{
+							showParent && (taskItem.parentProject || taskItem.parentUniverse) ? (
+								<p className="text-sm text-slate-400">{taskItem.parentProject ? U.getProject(taskItem.parentProject)?.title : (taskItem.parentUniverse ? U.getUniverse(taskItem.parentUniverse)?.title : "")}</p>
+							) : null
+						}
 					</div>
 				:	<>
 						<div className="flex flex-row">

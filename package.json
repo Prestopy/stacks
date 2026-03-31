@@ -7,7 +7,9 @@
 		"lint": "turbo lint"
 	},
 	"devDependencies": {
-		"turbo": "latest"
+		"turbo": "latest",
+		"eslint": "^9",
+		"eslint-config-next": "16.0.10"
 	},
 	"packageManager": "pnpm@10.0.0"
 }
