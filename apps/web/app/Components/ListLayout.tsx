@@ -144,10 +144,12 @@ export default function ListLayout(props: ListLayoutProps) {
 function BlockRenderer({
 	block,
 
+	hideParent,
 	taskItemActions,
 	taskFolderActions,
 }: {
 	block: Block;
+	hideParent?: boolean;
 } & Omit<ListLayoutProps, "blocks" | "taskItemsForView" | "allProjects" | "taskFoldersForView">) {
 	const U = useUniversalState();
 	const [editingFolderId, setEditingFolderId] = useState<Id<"taskFolders"> | null>(null);
@@ -159,6 +161,7 @@ function BlockRenderer({
 					<ProjectBlockRenderer
 						block={block}
 
+						hideParent
 						taskFolderActions={taskFolderActions}
 						taskItemActions={taskItemActions}
 					/>
@@ -196,7 +199,7 @@ function BlockRenderer({
 					<TaskItemLayout
 						taskItem={block.value}
 						isSelected={U.selectedTaskItemId === block.value._id}
-						showParent={U.getView(U.selectedViewId)?.kind === "systemFilter"}
+						showParent={!hideParent && U.getView(U.selectedViewId)?.kind === "systemFilter"}
 						showTodayIcon={U.getView(U.selectedViewId)?.kind !== "systemFilter" || U.getView(U.selectedViewId)?.id !== "today"}
 						thisActions={{
 							create: null,
@@ -215,10 +218,12 @@ function ProjectBlockRenderer(
 	{
 		block,
 
+		hideParent,
 		taskItemActions,
 		taskFolderActions,
 	}: {
 		block: ProjectBlock;
+		hideParent?: boolean;
 	} & Omit<ListLayoutProps, "blocks" | "taskItemsForView" | "allProjects" | "taskFoldersForView">
 ) {
 	const U = useUniversalState();
@@ -232,17 +237,27 @@ function ProjectBlockRenderer(
 
 	return (
 		<div ref={ref} className={"select-none rounded-md " + (isDropTarget ? "bg-green-500/20" : "")}>
-			<div className="group flex flex-row items-center gap-4 px-3">
+			<div className="flex flex-row items-center gap-4 px-3">
 				<RichIcon iconData={Constants.DynamicIcons.PROJECT(project.color)} size={24} />
 
 				<div className="flex flex-row gap-1 items-center">
-					<h2 className="text-xl font-bold">{project.title}</h2>
-					<button
-						className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white duration-100"
-						onClick={() => U.navigateToView(project._id)}
-					>
-						<IconChevronRight size={24} />
-					</button>
+					<h2 className="text-xl font-bold flex items-center gap-2">
+						<span className="font-normal">
+							<span
+								className="hover:underline underline-offset-3 text-slate-400 cursor-pointer"
+								onClick={() => U.navigateToView(project.parentUniverse)}
+							>{U.getUniverse(project.parentUniverse)?.title}</span>
+						</span>
+						<span className="text-slate-400 font-normal">/</span>
+						<div className="group inline-flex items-center justify-center gap-2 cursor-pointer">
+							<span className="group-hover:underline underline-offset-3" onClick={() => U.navigateToView(project._id)}>
+								{project.title}
+							</span>
+								<span className="inline-block opacity-0 group-hover:opacity-100 duration-100">
+								<IconChevronRight size={24} />
+							</span>
+						</div>
+					</h2>
 				</div>
 			</div>
 
@@ -253,6 +268,7 @@ function ProjectBlockRenderer(
 					key={child.value._id}
 					block={child}
 
+					hideParent={hideParent}
 					taskFolderActions={taskFolderActions}
 					taskItemActions={taskItemActions}
 				/>
