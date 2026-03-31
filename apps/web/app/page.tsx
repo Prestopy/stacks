@@ -58,8 +58,6 @@ export default function Home() {
 	const [selectedViewId, setSelectedViewId] = useState<ViewId>(Constants.FilterViews.INBOX.id);
 	const [selectedTaskItem, setSelectedTaskItem] = useState<Id<"taskItems"> | null>(null);
 
-	// FIXME: check if in current view
-	// if not, navigate to the view with it
 	const navigateToTaskItem = (taskItemId: Id<"taskItems"> | null) => {
 		setSelectedTaskItem(taskItemId);
 
@@ -74,7 +72,7 @@ export default function Home() {
 			// (at the very least as late in the today section)
 
 			// If it is listed as more than just a deadline block, ignore
-			if (taskItem.deadline && taskItem.startDate) return;
+			if (taskItem.startDate) return;
 		} else {
 			// If the task item is in the current view, ignore
 			if (taskItemsForView.some(ti => ti._id.toString() === taskItemId.toString())) return;
